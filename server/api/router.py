@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from api.endpoints import celestial_objects, missions, iss_tracking, asteroids, astronomy_images, space_weather, launches
+from api.endpoints import celestial_objects, missions, iss_tracking, asteroids, astronomy_images, space_weather, launches, mars
 
 api_router = APIRouter()
 
@@ -11,3 +11,4 @@ api_router.include_router(asteroids.router, prefix="/api", tags=["asteroids"])
 api_router.include_router(astronomy_images.router, prefix="/api", tags=["astronomy-images"])
 api_router.include_router(space_weather.router, prefix="/api", tags=["space-weather"])
 api_router.include_router(launches.router, prefix="/api", tags=["launches"])
+api_router.include_router(mars.router, prefix="/api", tags=["mars"])

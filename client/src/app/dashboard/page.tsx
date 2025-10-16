@@ -4,8 +4,11 @@ import ActivityChart from '@/components/dashboard/ActivityChart'
 import AsteroidTracker from '@/components/dashboard/AsteroidTracker'
 import AstronomyPictureOfTheDay from '@/components/dashboard/AstronomyPictureOfTheDay'
 import DataMetrics from '@/components/dashboard/DataMetrics'
+import EarthViewer from '@/components/dashboard/EarthViewer'
 import LaunchCalendar from '@/components/dashboard/LaunchCalendar'
 import LaunchFrequencyChart from '@/components/dashboard/LaunchFrequencyChart'
+import MarsRoverGallery from '@/components/dashboard/MarsRoverGallery'
+import MarsWeather from '@/components/dashboard/MarsWeather'
 import MissionDistributionChart from '@/components/dashboard/MissionDistributionChart'
 import MissionStatus from '@/components/dashboard/MissionStatus'
 import SpaceWeather from '@/components/dashboard/SpaceWeather'
@@ -21,6 +24,7 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt'
 import ShieldIcon from '@mui/icons-material/Shield'
 import SpeedIcon from '@mui/icons-material/Speed'
+import TerrainIcon from '@mui/icons-material/Terrain'
 import { AppBar, Box, Chip, Container, Grid, Tab, Tabs, Toolbar, Typography } from '@mui/material'
 import { useState } from 'react'
 
@@ -92,6 +96,7 @@ export default function Dashboard() {
           <Tab icon={<PublicIcon />} label="BRIDGE" iconPosition="start" />
           <Tab icon={<RocketLaunchIcon />} label="OPERATIONS" iconPosition="start" />
           <Tab icon={<ShieldIcon />} label="THREAT MONITOR" iconPosition="start" />
+          <Tab icon={<TerrainIcon />} label="MARS" iconPosition="start" />
           <Tab icon={<ImageIcon />} label="OBSERVATORY" iconPosition="start" />
         </Tabs>
       </AppBar>
@@ -218,14 +223,28 @@ export default function Dashboard() {
 
         {activeTab === 4 && (
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, lg: 8 }}>
-              <AstronomyPictureOfTheDay />
+            <Grid size={{ xs: 12 }}>
+              <MarsRoverGallery />
             </Grid>
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <MarsWeather />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <SystemMonitor />
                 <TelemetryPanel />
               </Box>
+            </Grid>
+          </Grid>
+        )}
+
+        {activeTab === 5 && (
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, lg: 8 }}>
+              <AstronomyPictureOfTheDay />
+            </Grid>
+            <Grid size={{ xs: 12, lg: 4 }}>
+              <EarthViewer />
             </Grid>
           </Grid>
         )}

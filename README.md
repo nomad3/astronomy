@@ -17,8 +17,11 @@ Transform your browser into a **futuristic starship control deck** with:
 - 🌍 **Live ISS tracking** with interactive maps and telemetry
 - 🚀 **Mission control** with T-minus countdown timers
 - 🛡️ **Planetary defense** monitoring asteroids and space weather
+- 🔴 **Mars exploration** with rover photos and Martian weather
+- 🌏 **Earth observation** from L1 Lagrange point (EPIC)
 - 🌌 **3D solar system** visualization with all planets
 - 📡 **Live data feeds** updating in real-time
+- 📈 **Advanced charts** (area, bar, donut) with Recharts
 
 ## ✨ Features Overview
 
@@ -151,11 +154,64 @@ Transform your browser into a **futuristic starship control deck** with:
 - **"ALL CLEAR"** banner when no active alerts
 - Color-coded by severity (Info/Warning/Alert)
 
+### 🔴 MARS - Red Planet Mission Control
+
+**Mars Rover Gallery**
+- **Interactive rover selector**: Choose from 4 rovers (Curiosity, Perseverance, Opportunity, Spirit)
+- **Sol picker**: Browse photos from specific Martian days (sol 1000, 2000, 3000, 3500)
+- **12-image responsive grid**: High-resolution Mars surface photography
+- **Camera metadata display**:
+  - Full camera name (e.g., "Mast Camera", "Navigation Camera")
+  - Camera abbreviation (MAST_CAM, NAVCAM, etc.)
+  - Earth date for each photo
+  - Sol number (Martian day)
+- **Rover mission cards** (fallback when API unavailable):
+  - Rover status (Active/Ended)
+  - Landing date
+  - Landing location (Gale Crater, Jezero Crater, etc.)
+  - Mission objectives and achievements
+- **Hover effects**: Cards scale up and glow with red borders
+- **Dropdown filters**: Easy rover and sol selection
+
+**Mars Weather Station**
+- **InSight lander atmospheric data** from Elysium Planitia
+- **Last 7 sols** of weather readings displayed in grid
+- **Atmospheric measurements**:
+  - 🌡️ Temperature (°C) - Orange glow display
+  - 💨 Wind speed (m/s) - Cyan glow display
+  - 🔽 Atmospheric pressure (Pa) - Magenta glow display
+  - 🌱 Martian season indicator
+- **Sol-by-sol cards** with technical styling
+- **Real-time conversion** from Martian to Earth time
+- **Mission info banner**: InSight mission duration (Nov 2018 - Dec 2022)
+- **Graceful degradation**: Shows mission info when historical data limited
+
 ### 🔭 OBSERVATORY - Science Station
-- **Astronomy Picture of the Day** with high-res imagery
-- **Scientific descriptions** and explanations
-- **System diagnostics** always visible
-- **Telemetry readouts**
+
+**Astronomy Picture of the Day (APOD)**
+- **Daily NASA imagery** with professional astronomical content
+- **High-resolution photos** and videos from space
+- **Scientific explanations** written by expert astronomers
+- **Media type support**: Images and embedded videos
+- **Title and description** for educational context
+- **Loading states** with skeleton animations
+- **Error handling** with retry suggestions
+
+**EPIC Earth Observatory**
+- **DSCOVR satellite** images from L1 Lagrange point (1.5 million km from Earth)
+- **Full-disk natural color** Earth photography
+- **Real-time Earth monitoring**:
+  - Centroid coordinates (latitude/longitude of Earth center)
+  - Satellite position data (DSCOVR J2000)
+  - Lunar position data (Moon J2000)
+  - Solar position data (Sun J2000)
+  - Attitude quaternions (satellite orientation)
+- **6-image gallery** showing recent Earth captures
+- **Image metadata chips**: Date and coordinate displays
+- **High-resolution PNG** images from NASA GSFC
+- **Responsive grid layout** (2 columns on desktop, 1 on mobile)
+- **Hover animations**: Cards scale and glow blue on interaction
+- **Mission banner**: "DSCOVR SATELLITE • L1 LAGRANGE POINT"
 
 ## 🎨 Sci-Fi Interface Design
 
@@ -205,7 +261,8 @@ Transform your browser into a **futuristic starship control deck** with:
 │  │     ├─ BRIDGE (3D, Telemetry)                       │   │
 │  │     ├─ OPERATIONS (Missions, Launches)              │   │
 │  │     ├─ THREAT MONITOR (Asteroids, Weather)          │   │
-│  │     └─ OBSERVATORY (Images)                         │   │
+│  │     ├─ MARS (Rover Photos, Weather)                 │   │
+│  │     └─ OBSERVATORY (APOD, EPIC Earth)               │   │
 │  └───────────────────────────────────────────────────┘   │
 │                                                           │
 │  Components:                                              │
@@ -222,7 +279,10 @@ Transform your browser into a **futuristic starship control deck** with:
 │  ├─ SpaceWeather (Solar alerts)                          │
 │  ├─ SolarSystem (3D Three.js)                            │
 │  ├─ ISSTrackerMap (Leaflet map)                          │
-│  └─ AstronomyPictureOfTheDay (NASA APOD)                 │
+│  ├─ AstronomyPictureOfTheDay (NASA APOD)                 │
+│  ├─ MarsRoverGallery (Mars photos with filters)          │
+│  ├─ MarsWeather (InSight atmospheric data)               │
+│  └─ EarthViewer (EPIC Earth observatory)                 │
 └──────────────────────────────────────────────────────────┘
                          ↕ HTTP/REST API
 ┌──────────────────────────────────────────────────────────┐
@@ -233,6 +293,9 @@ Transform your browser into a **futuristic starship control deck** with:
 │  │  ├─ NASA NEO API (Asteroid tracking)              │   │
 │  │  ├─ NASA DONKI (Space weather alerts)             │   │
 │  │  ├─ NASA APOD (Daily astronomy images)            │   │
+│  │  ├─ NASA Mars Rover Photos (Surface imagery)      │   │
+│  │  ├─ NASA InSight (Mars weather data)              │   │
+│  │  ├─ NASA EPIC (Earth full-disk images)            │   │
 │  │  └─ Where The ISS At? (Real-time tracking)        │   │
 │  └───────────────────────────────────────────────────┘   │
 │                                                           │
@@ -243,6 +306,9 @@ Transform your browser into a **futuristic starship control deck** with:
 │  ├─ /api/space-weather                                    │
 │  ├─ /api/iss-tracking                                     │
 │  ├─ /api/astronomy-images/apod                            │
+│  ├─ /api/mars/rover-photos                                │
+│  ├─ /api/mars/weather                                     │
+│  ├─ /api/earth/epic                                       │
 │  └─ /api/celestial-objects (CRUD)                         │
 └──────────────────────────────────────────────────────────┘
                          ↕
@@ -282,6 +348,9 @@ Transform your browser into a **futuristic starship control deck** with:
 - **NASA NEO**: Near-Earth Object tracking
 - **NASA DONKI**: Space weather notifications and CME alerts
 - **NASA APOD**: Astronomy Picture of the Day
+- **NASA Mars Rover Photos**: Curiosity, Perseverance, Opportunity, Spirit imagery
+- **NASA InSight**: Mars atmospheric weather data
+- **NASA EPIC**: Earth Polychromatic Imaging Camera (full-disk Earth)
 - **Where The ISS At?**: Real-time ISS location
 
 ### DevOps
@@ -345,12 +414,13 @@ docker-compose logs -f
 1. **Landing Page** → Epic hero animation with glowing satellite icon
 2. **Click "ENTER CONTROL DECK"** → 3-2-1 countdown begins
 3. **Auto-redirect to Dashboard** → Full control center loads
-4. **Navigate 5 tabs**:
-   - 📊 ANALYTICS - KPIs and charts
-   - 🌍 BRIDGE - Solar system and telemetry
-   - 🚀 OPERATIONS - Missions and launches
+4. **Navigate 6 tabs**:
+   - 📊 ANALYTICS - KPIs, charts, and real-time metrics
+   - 🌍 BRIDGE - 3D solar system and live telemetry
+   - 🚀 OPERATIONS - Missions and launch schedules
    - 🛡️ THREAT MONITOR - Asteroids and space weather
-   - 🔭 OBSERVATORY - Space imagery
+   - 🔴 MARS - Rover photos and Martian weather
+   - 🔭 OBSERVATORY - Space imagery and Earth from space
 
 ## 🌐 API Endpoints
 
@@ -372,6 +442,13 @@ GET /api/space-weather              # Solar activity and CME alerts
 ```bash
 GET /api/iss-tracking               # Real-time ISS position
 GET /api/astronomy-images/apod      # NASA's Picture of the Day
+```
+
+### Mars Exploration
+```bash
+GET /api/mars/rover-photos?rover=curiosity&sol=1000&limit=12  # Mars Rover photos
+GET /api/mars/weather                                          # Mars atmospheric data
+GET /api/earth/epic?limit=6                                    # EPIC Earth images
 ```
 
 ### Database CRUD
@@ -412,6 +489,9 @@ astronomy/
 │   │       │   ├── LaunchCalendar.tsx          # Launches
 │   │       │   ├── AsteroidTracker.tsx         # NEOs
 │   │       │   ├── SpaceWeather.tsx            # Solar alerts
+│   │       │   ├── MarsRoverGallery.tsx       # Mars photos
+│   │       │   ├── MarsWeather.tsx            # Mars weather
+│   │       │   ├── EarthViewer.tsx            # EPIC Earth
 │   │       │   └── AstronomyPictureOfTheDay.tsx
 │   │       ├── ui/
 │   │       │   ├── StatusIndicator.tsx         # Pulsing LEDs
@@ -433,12 +513,14 @@ astronomy/
 │   │   │   ├── space_weather.py        # NASA DONKI
 │   │   │   ├── astronomy_images.py     # NASA APOD
 │   │   │   ├── iss_tracking.py         # ISS API
+│   │   │   ├── mars.py                 # Mars & EPIC APIs
 │   │   │   └── celestial_objects.py    # Database CRUD
 │   │   ├── router.py                   # API router
 │   │   └── deps.py                     # Dependencies
 │   ├── services/
 │   │   ├── launch_library.py           # Launch Library client
-│   │   ├── nasa.py                     # NASA API client
+│   │   ├── nasa.py                     # NASA API client (NEO, DONKI)
+│   │   ├── mars.py                     # Mars & EPIC API client
 │   │   └── __init__.py
 │   ├── core/
 │   │   └── config.py                   # Pydantic settings
@@ -749,12 +831,19 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- **NASA**: For incredible open data APIs (NEO, DONKI, APOD)
+- **NASA Open APIs**: For incredible space data
+  - NEO (Near-Earth Objects)
+  - DONKI (Space Weather)
+  - APOD (Astronomy Picture of the Day)
+  - Mars Rover Photos (Curiosity, Perseverance, Opportunity, Spirit)
+  - InSight Mars Weather
+  - EPIC (Earth Polychromatic Imaging Camera)
 - **Launch Library 2**: For comprehensive launch and mission data
 - **Where The ISS At?**: For real-time ISS tracking API
 - **Three.js**: For stunning 3D visualizations
 - **Material-UI**: For beautiful React components
 - **Recharts**: For responsive, beautiful charts
+- **Leaflet**: For interactive map visualization
 - **FastAPI**: For the excellent async Python framework
 - **Next.js**: For the powerful React framework
 
