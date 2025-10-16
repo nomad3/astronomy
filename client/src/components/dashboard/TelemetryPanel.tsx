@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, Typography, Box, Grid } from '@mui/material'
+import { Box, Card, CardContent, Grid, Typography } from '@mui/material'
+import { useEffect, useState } from 'react'
 
 interface TelemetryData {
   label: string
@@ -22,7 +22,7 @@ export default function TelemetryPanel() {
     const interval = setInterval(() => {
       setTelemetry(prev => prev.map(item => ({
         ...item,
-        value: item.label === 'VELOCITY' 
+        value: item.label === 'VELOCITY'
           ? (27580 + Math.random() * 20 - 10).toFixed(0)
           : item.label === 'ALTITUDE'
           ? (400 + Math.random() * 2 - 1).toFixed(2)
@@ -126,4 +126,3 @@ export default function TelemetryPanel() {
     </Card>
   )
 }
-
