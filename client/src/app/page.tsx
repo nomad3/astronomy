@@ -1,8 +1,10 @@
-import SolarSystem from '@/components/visualizations/SolarSystem';
-import ISSTrackerMap from '@/components/visualizations/ISSTrackerMap';
-import MissionStatus from '@/components/dashboard/MissionStatus';
-import LaunchCalendar from '@/components/dashboard/LaunchCalendar';
+"use client"
+
 import AstronomyPictureOfTheDay from '@/components/dashboard/AstronomyPictureOfTheDay';
+import LaunchCalendar from '@/components/dashboard/LaunchCalendar';
+import MissionStatus from '@/components/dashboard/MissionStatus';
+import ISSTrackerMap from '@/components/visualizations/ISSTrackerMap';
+import SolarSystem from '@/components/visualizations/SolarSystem';
 import { AppBar, Box, Grid, Toolbar, Typography } from '@mui/material';
 
 export default function Home() {

@@ -5,3 +5,4 @@ psycopg2-binary
 aioredis
 httpx
 SQLAlchemy
+pydantic-settings
