@@ -407,7 +407,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-Project Link: [https://github.com/yourusername/astronomy](https://github.com/yourusername/astronomy)
+Project Link: [https://github.com/nomad3/astronomy](https://github.com/nomad3/astronomy)
 
 ---
 
