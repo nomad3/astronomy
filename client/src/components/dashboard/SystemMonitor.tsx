@@ -1,14 +1,18 @@
 'use client'
 
+import { Box, Card, CardContent, LinearProgress, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { Card, CardContent, Typography, Box, LinearProgress } from '@mui/material'
 import StatusIndicator from '../ui/StatusIndicator'
 
 export default function SystemMonitor() {
-  const [time, setTime] = useState(new Date())
+  const [time, setTime] = useState<Date | null>(null)
   const [uptime, setUptime] = useState(0)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+    setTime(new Date())
+
     const timer = setInterval(() => {
       setTime(new Date())
       setUptime(prev => prev + 1)
@@ -51,12 +55,20 @@ export default function SystemMonitor() {
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
             MISSION CLOCK
           </Typography>
-          <Typography variant="h5" sx={{ color: 'primary.main', fontFamily: 'Share Tech Mono', textShadow: '0 0 10px rgba(0, 255, 255, 0.5)' }}>
-            {time.toISOString().split('T')[1].split('.')[0]} UTC
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            DATE: {time.toISOString().split('T')[0]}
-          </Typography>
+          {mounted && time ? (
+            <>
+              <Typography variant="h5" sx={{ color: 'primary.main', fontFamily: 'Share Tech Mono', textShadow: '0 0 10px rgba(0, 255, 255, 0.5)' }}>
+                {time.toISOString().split('T')[1].split('.')[0]} UTC
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                DATE: {time.toISOString().split('T')[0]}
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="h5" sx={{ color: 'text.secondary', fontFamily: 'Share Tech Mono' }}>
+              --:--:-- UTC
+            </Typography>
+          )}
         </Box>
 
         <Box sx={{ mt: 2 }}>
@@ -81,4 +93,3 @@ export default function SystemMonitor() {
     </Card>
   )
 }
-
