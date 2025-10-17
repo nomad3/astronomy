@@ -2,7 +2,7 @@
 
 A futuristic space exploration command center built with FastAPI, Next.js, and Three.js. Experience a cutting-edge spaceship control board interface with real-time analytics, mission tracking, and threat monitoring powered by NASA and space agency APIs.
 
-![Next.js](https://img.shields.io/badge/Next.js-13.5-black?style=flat&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-13.5.11-black?style=flat&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)
 ![FastAPI](https://img.shields.io/badge/FastAPI-latest-009688?style=flat&logo=fastapi)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python)
@@ -321,11 +321,11 @@ Transform your browser into a **futuristic starship control deck** with:
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **Framework**: Next.js 13.5 (React 18, App Router)
+- **Framework**: Next.js 13.5.11 (React 18, App Router)
 - **Language**: TypeScript 5
-- **UI Library**: Material-UI (MUI) 7.3 with custom sci-fi theme
-- **Charts**: Recharts (responsive charts library)
-- **3D Graphics**: Three.js, React Three Fiber, Drei
+- **UI Library**: Material-UI (MUI) 7.3.4 with custom sci-fi theme
+- **Charts**: Recharts 3.2.1 (responsive charts library)
+- **3D Graphics**: Three.js 0.180.0, React Three Fiber 8.18.0, Drei 9.122.0
 - **Maps**: Leaflet, React Leaflet
 - **Styling**: Emotion (CSS-in-JS) with custom neon effects
 - **Fonts**:
