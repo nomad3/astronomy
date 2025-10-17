@@ -16,16 +16,20 @@ import SpaceWeather from '@/components/dashboard/SpaceWeather'
 import SystemHealthPanel from '@/components/dashboard/SystemHealthPanel'
 import SystemMonitor from '@/components/dashboard/SystemMonitor'
 import TelemetryPanel from '@/components/dashboard/TelemetryPanel'
+import TelescopeGallery from '@/components/dashboard/TelescopeGallery'
 import CelestialObjectExplorer from '@/components/visualizations/CelestialObjectExplorer'
 import ISSTrackerMap from '@/components/visualizations/ISSTrackerMap'
 import SolarSystem from '@/components/visualizations/SolarSystem'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import ImageIcon from '@mui/icons-material/Image'
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import PublicIcon from '@mui/icons-material/Public'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt'
+import ScienceIcon from '@mui/icons-material/Science'
 import ShieldIcon from '@mui/icons-material/Shield'
 import SpeedIcon from '@mui/icons-material/Speed'
+import TelegramIcon from '@mui/icons-material/Telegram'
 import TerrainIcon from '@mui/icons-material/Terrain'
 import { AppBar, Box, Chip, Container, Grid, Tab, Tabs, Toolbar, Typography } from '@mui/material'
 import { useState } from 'react'
@@ -248,11 +252,45 @@ export default function Dashboard() {
 
         {activeTab === 5 && (
           <Grid container spacing={2}>
+            {/* James Webb Space Telescope */}
+            <Grid size={{ xs: 12 }}>
+              <TelescopeGallery
+                telescope="jwst"
+                title="JAMES WEBB SPACE TELESCOPE"
+                icon={<PhotoCameraIcon />}
+                color="#ff00ff"
+              />
+            </Grid>
+
+            {/* Hubble Space Telescope */}
+            <Grid size={{ xs: 12 }}>
+              <TelescopeGallery
+                telescope="hubble"
+                title="HUBBLE SPACE TELESCOPE"
+                icon={<ScienceIcon />}
+                color="#00ffff"
+              />
+            </Grid>
+
+            {/* Space Probes */}
+            <Grid size={{ xs: 12 }}>
+              <TelescopeGallery
+                telescope="probes"
+                title="SPACE PROBE IMAGERY"
+                icon={<TelegramIcon />}
+                color="#ffaa00"
+              />
+            </Grid>
+
+            {/* APOD and Earth Viewer */}
             <Grid size={{ xs: 12, lg: 8 }}>
               <AstronomyPictureOfTheDay />
             </Grid>
             <Grid size={{ xs: 12, lg: 4 }}>
-              <EarthViewer />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <EarthViewer />
+                <SystemMonitor />
+              </Box>
             </Grid>
           </Grid>
         )}
