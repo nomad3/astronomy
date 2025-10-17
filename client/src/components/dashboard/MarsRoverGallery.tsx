@@ -8,7 +8,6 @@ import {
     Box,
     Card,
     CardContent,
-    CardMedia,
     Chip,
     FormControl,
     Grid,
@@ -16,7 +15,7 @@ import {
     MenuItem,
     Select,
     Skeleton,
-    Typography,
+    Typography
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 
@@ -44,16 +43,15 @@ export default function MarsRoverGallery() {
       try {
         const response = await fetch(`/api/mars/rover-photos?rover=${rover}&sol=${sol}&limit=12`)
         if (!response.ok) {
-          // API might be unavailable, show demo data
           setPhotos([])
-          setError('Mars Rover Photos API currently unavailable. Displaying mission info.')
+          setError('Unable to fetch rover photos')
           return
         }
         const data = await response.json()
         setPhotos(data.photos ?? [])
-        setError(null)
+        setError(data.demo ? 'Displaying demo data (Mars Rover Photos API temporarily unavailable)' : null)
       } catch (err: any) {
-        setError('Mars Rover Photos API currently unavailable. Displaying mission info.')
+        setError('Unable to fetch rover photos')
         setPhotos([])
       } finally {
         setLoading(false)
@@ -135,68 +133,10 @@ export default function MarsRoverGallery() {
           </Grid>
         )}
 
-        {error && <Alert severity="error" sx={{ mt: 2 }}>Error loading Mars photos: {error}</Alert>}
-
         {error && (
-          <Box sx={{ mt: 2 }}>
-            <Alert severity="warning" sx={{ mb: 3 }}>
-              {error}
-            </Alert>
-            <Grid container spacing={2}>
-              {[
-                {
-                  name: 'Curiosity',
-                  status: 'Active',
-                  landing: '2012-08-06',
-                  location: 'Gale Crater',
-                  mission: 'Studying Mars climate and geology',
-                },
-                {
-                  name: 'Perseverance',
-                  status: 'Active',
-                  landing: '2021-02-18',
-                  location: 'Jezero Crater',
-                  mission: 'Search for ancient life, collect samples',
-                },
-                {
-                  name: 'Opportunity',
-                  status: 'Ended',
-                  landing: '2004-01-25',
-                  location: 'Meridiani Planum',
-                  mission: 'Completed 2004-2018 (14 years)',
-                },
-              ].map((roverInfo, idx) => (
-                <Grid size={{ xs: 12, md: 4 }} key={idx}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      border: '1px solid rgba(255, 0, 85, 0.3)',
-                      borderRadius: 1,
-                      bgcolor: 'rgba(0, 0, 0, 0.3)',
-                    }}
-                  >
-                    <Typography variant="h6" sx={{ color: 'error.main', mb: 1 }}>
-                      {roverInfo.name}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Status: <span style={{ color: roverInfo.status === 'Active' ? '#00ff00' : '#ffaa00' }}>{roverInfo.status}</span>
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Landing: {roverInfo.landing}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Location: {roverInfo.location}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1 }}>
-                        {roverInfo.mission}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
+          <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
+            📡 {error} • Displaying rover metadata and camera information from Sol {sol}
+          </Alert>
         )}
 
         {!loading && !error && photos.length === 0 && (
@@ -251,16 +191,52 @@ export default function MarsRoverGallery() {
                       },
                     }}
                   >
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={photo.img_src}
-                      alt={`Mars ${photo.camera}`}
+                    <Box
                       sx={{
-                        objectFit: 'cover',
+                        height: 200,
                         borderBottom: '1px solid rgba(255, 0, 85, 0.3)',
+                        background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.3) 0%, rgba(255, 0, 0, 0.2) 50%, rgba(70, 35, 10, 0.4) 100%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: `radial-gradient(circle at ${30 + (photo.id % 3) * 20}% ${40 + (photo.id % 2) * 20}%, rgba(255, 100, 0, 0.2) 0%, transparent 50%)`,
+                        },
                       }}
-                    />
+                    >
+                      <TerrainIcon sx={{ fontSize: 80, color: 'rgba(255, 0, 85, 0.3)', mb: 1 }} />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'error.main',
+                          fontFamily: 'Share Tech Mono',
+                          fontSize: '0.7rem',
+                          textAlign: 'center',
+                          px: 2,
+                        }}
+                      >
+                        {photo.camera}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'text.secondary',
+                          fontSize: '0.6rem',
+                          mt: 0.5,
+                        }}
+                      >
+                        SOL {photo.sol}
+                      </Typography>
+                    </Box>
                     <CardContent>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                         <CameraAltIcon sx={{ fontSize: 14, color: 'text.secondary' }} />

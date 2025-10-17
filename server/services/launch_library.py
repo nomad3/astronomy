@@ -6,11 +6,20 @@ from typing import Any, Dict, List
 
 import httpx
 
+from core.cache import get_cached, set_cache
+
 LAUNCH_LIBRARY_BASE_URL = "https://ll.thespacedevs.com/2.2.0"
 
 
 async def fetch_upcoming_launches(limit: int = 10) -> List[Dict[str, Any]]:
-    """Fetch upcoming launches from Launch Library 2 API."""
+    """Fetch upcoming launches from Launch Library 2 API (cached for 5 minutes)."""
+
+    cache_key = f"launches:upcoming:{limit}"
+
+    # Try cache first
+    cached = await get_cached(cache_key)
+    if cached:
+        return cached
 
     endpoint = f"{LAUNCH_LIBRARY_BASE_URL}/launch/upcoming/"
     params = {
@@ -25,7 +34,7 @@ async def fetch_upcoming_launches(limit: int = 10) -> List[Dict[str, Any]]:
 
     data = response.json()
     launches = data.get("results", [])
-    return [
+    result = [
         {
             "id": launch.get("id"),
             "name": launch.get("name"),
@@ -46,6 +55,10 @@ async def fetch_upcoming_launches(limit: int = 10) -> List[Dict[str, Any]]:
         }
         for launch in launches
     ]
+
+    # Cache for 5 minutes (launch data updates frequently)
+    await set_cache(cache_key, result, expire=300)
+    return result
 
 
 async def fetch_missions(limit: int = 10) -> List[Dict[str, Any]]:
@@ -71,4 +84,3 @@ async def fetch_missions(limit: int = 10) -> List[Dict[str, Any]]:
         )
 
     return missions
-

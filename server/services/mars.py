@@ -6,13 +6,21 @@ from typing import Any, Dict, List
 
 import httpx
 
+from core.cache import get_cached, set_cache
 from core.config import settings
 
 NASA_BASE_URL = "https://api.nasa.gov"
 
 
 async def fetch_mars_rover_photos(rover: str = "curiosity", sol: int = 1000, limit: int = 10) -> List[Dict[str, Any]]:
-    """Fetch Mars Rover photos from NASA API."""
+    """Fetch Mars Rover photos from NASA API (cached for 12 hours)."""
+
+    cache_key = f"mars:rover:{rover}:{sol}:{limit}"
+
+    # Try cache first
+    cached = await get_cached(cache_key)
+    if cached:
+        return cached
 
     # Correct endpoint based on NASA API documentation
     endpoint = f"https://api.nasa.gov/mars-photos/api/v1/rovers/{rover}/photos"
@@ -29,7 +37,7 @@ async def fetch_mars_rover_photos(rover: str = "curiosity", sol: int = 1000, lim
 
     photos = data.get("photos", [])[:limit]
 
-    return [
+    result = [
         {
             "id": photo.get("id"),
             "sol": photo.get("sol"),
@@ -45,9 +53,20 @@ async def fetch_mars_rover_photos(rover: str = "curiosity", sol: int = 1000, lim
         for photo in photos
     ]
 
+    # Cache for 12 hours (historical data doesn't change)
+    await set_cache(cache_key, result, expire=43200)
+    return result
+
 
 async def fetch_mars_weather() -> Dict[str, Any]:
-    """Fetch Mars weather data from InSight mission."""
+    """Fetch Mars weather data from InSight mission (cached for 24 hours)."""
+
+    cache_key = "mars:weather:insight"
+
+    # Try cache first
+    cached = await get_cached(cache_key)
+    if cached:
+        return cached
 
     endpoint = f"{NASA_BASE_URL}/insight_weather/"
     params = {
@@ -76,15 +95,26 @@ async def fetch_mars_weather() -> Dict[str, Any]:
                 "season": sol_data.get("Season"),
             })
 
-    return {
+    result = {
         "sol_keys": sol_keys,
         "weather_data": weather_data,
         "validity_checks": data.get("validity_checks", {}),
     }
 
+    # Cache for 24 hours (InSight mission ended, historical data)
+    await set_cache(cache_key, result, expire=86400)
+    return result
+
 
 async def fetch_epic_images(limit: int = 10) -> List[Dict[str, Any]]:
-    """Fetch EPIC (Earth Polychromatic Imaging Camera) images."""
+    """Fetch EPIC (Earth Polychromatic Imaging Camera) images (cached for 2 hours)."""
+
+    cache_key = f"earth:epic:{limit}"
+
+    # Try cache first
+    cached = await get_cached(cache_key)
+    if cached:
+        return cached
 
     endpoint = f"{NASA_BASE_URL}/EPIC/api/natural/images"
     params = {
@@ -98,7 +128,7 @@ async def fetch_epic_images(limit: int = 10) -> List[Dict[str, Any]]:
 
     images = data[:limit] if isinstance(data, list) else []
 
-    return [
+    result = [
         {
             "identifier": img.get("identifier"),
             "caption": img.get("caption"),
@@ -115,3 +145,7 @@ async def fetch_epic_images(limit: int = 10) -> List[Dict[str, Any]]:
         }
         for img in images
     ]
+
+    # Cache for 2 hours (EPIC updates approximately every 2 hours)
+    await set_cache(cache_key, result, expire=7200)
+    return result

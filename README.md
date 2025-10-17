@@ -358,6 +358,20 @@ Transform your browser into a **futuristic starship control deck** with:
 - **Services**: 4 containers (client, server, PostgreSQL, Redis)
 - **Hot Reload**: Enabled for development
 - **Proxy**: Next.js API rewrites for seamless backend calls
+- **Caching Strategy**: Redis-based response caching to respect API rate limits
+
+### Performance & Caching
+- **Redis Caching**: Intelligent response caching to prevent API rate limit hits
+- **Cache Durations**:
+  - APOD: 6 hours (updates daily)
+  - Near-Earth Objects: 1 hour (frequent updates)
+  - Space Weather: 10 minutes (critical alerts)
+  - Launches: 5 minutes (real-time countdowns)
+  - Mars Rover Photos: 12 hours (historical data)
+  - EPIC Earth Images: 2 hours (satellite update frequency)
+  - Mars Weather: 24 hours (InSight mission ended)
+- **Rate Limit Management**: 1,000 requests/hour with personal NASA API key
+- **API Monitor**: Dashboard component showing usage and remaining quota
 
 ## 📋 Prerequisites
 
@@ -700,6 +714,18 @@ NASA_API_KEY=your_actual_key
 # Restart server
 docker-compose restart server
 ```
+
+**Rate Limit Details**:
+- `DEMO_KEY`: 30 requests/hour (very limited)
+- Personal key: **1,000 requests/hour** (recommended)
+- Redis caching automatically reduces API calls by 80-90%
+
+**Cache Benefits**:
+- First request hits the API, subsequent requests use cache
+- Cache times optimized for each data type
+- Automatic cache invalidation when expired
+- View cache status in API Rate Monitor component
+- Typical usage: ~100-200 requests/hour with caching enabled
 
 ### Port Conflicts
 **Problem**: Ports already in use

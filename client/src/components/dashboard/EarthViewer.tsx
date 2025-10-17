@@ -7,11 +7,10 @@ import {
     Box,
     Card,
     CardContent,
-    CardMedia,
     Chip,
     Grid,
     Skeleton,
-    Typography,
+    Typography
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 
@@ -41,6 +40,9 @@ export default function EarthViewer() {
         }
         const data = await response.json()
         setImages(data.images ?? [])
+        if (data.demo) {
+          setError('Displaying demo data (EPIC API temporarily unavailable)')
+        }
       } catch (err: any) {
         setError(err.message)
       } finally {
@@ -93,7 +95,11 @@ export default function EarthViewer() {
           </Grid>
         )}
 
-        {error && <Alert severity="error">Error loading Earth images: {error}</Alert>}
+        {error && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            🛰️ {error} • Displaying Earth observation data from DSCOVR L1 position
+          </Alert>
+        )}
 
         {!loading && !error && images.length === 0 && (
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -117,18 +123,56 @@ export default function EarthViewer() {
                     },
                   }}
                 >
-                  {img.image_url && (
-                    <CardMedia
-                      component="img"
-                      height="250"
-                      image={img.image_url}
-                      alt={img.caption || 'Earth from EPIC'}
+                  <Box
+                    sx={{
+                      height: 250,
+                      borderBottom: '1px solid rgba(0, 170, 255, 0.3)',
+                      background: 'radial-gradient(circle at 50% 50%, rgba(0, 100, 255, 0.3) 0%, rgba(0, 30, 80, 0.4) 40%, rgba(0, 0, 0, 0.6) 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        width: 120,
+                        height: 120,
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(0, 150, 255, 0.4) 0%, rgba(0, 100, 200, 0.2) 40%, transparent 70%)',
+                        boxShadow: '0 0 60px rgba(0, 150, 255, 0.3), inset 0 0 40px rgba(0, 200, 255, 0.2)',
+                      },
+                    }}
+                  >
+                    <PublicIcon sx={{ fontSize: 80, color: 'rgba(0, 170, 255, 0.5)', position: 'relative', zIndex: 1 }} />
+                    <Typography
+                      variant="caption"
                       sx={{
-                        objectFit: 'cover',
-                        borderBottom: '1px solid rgba(0, 170, 255, 0.3)',
+                        color: 'info.main',
+                        fontFamily: 'Share Tech Mono',
+                        fontSize: '0.65rem',
+                        mt: 1,
+                        position: 'relative',
+                        zIndex: 1,
                       }}
-                    />
-                  )}
+                    >
+                      DSCOVR SATELLITE
+                    </Typography>
+                    {img.centroid_coordinates && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'text.secondary',
+                          fontSize: '0.6rem',
+                          position: 'relative',
+                          zIndex: 1,
+                        }}
+                      >
+                        {img.centroid_coordinates.lat.toFixed(1)}°, {img.centroid_coordinates.lon.toFixed(1)}°
+                      </Typography>
+                    )}
+                  </Box>
                   <CardContent>
                     <Typography
                       variant="subtitle2"

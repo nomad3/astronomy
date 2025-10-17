@@ -1,6 +1,7 @@
 "use client"
 
 import ActivityChart from '@/components/dashboard/ActivityChart'
+import ApiRateMonitor from '@/components/dashboard/ApiRateMonitor'
 import AsteroidTracker from '@/components/dashboard/AsteroidTracker'
 import AstronomyPictureOfTheDay from '@/components/dashboard/AstronomyPictureOfTheDay'
 import DataMetrics from '@/components/dashboard/DataMetrics'
@@ -144,12 +145,15 @@ export default function Dashboard() {
               <MissionDistributionChart />
             </Grid>
 
-            {/* Data Tables */}
+            {/* Data Tables and API Monitor */}
             <Grid size={{ xs: 12, md: 6 }}>
               <MissionStatus />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <LaunchCalendar />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ApiRateMonitor />
             </Grid>
           </Grid>
         )}
