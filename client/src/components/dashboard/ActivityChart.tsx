@@ -1,40 +1,73 @@
 'use client'
 
 import TimelineIcon from '@mui/icons-material/Timeline'
-import { Box, Card, CardContent, Typography } from '@mui/material'
+import { Box, Card, CardContent, Skeleton, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 export default function ActivityChart() {
   const [mounted, setMounted] = useState(false)
-  const [data, setData] = useState([
-    { time: 'T-6h', launches: 12, missions: 45, threats: 3 },
-    { time: 'T-5h', launches: 15, missions: 52, threats: 2 },
-    { time: 'T-4h', launches: 18, missions: 58, threats: 4 },
-    { time: 'T-3h', launches: 22, missions: 63, threats: 1 },
-    { time: 'T-2h', launches: 25, missions: 67, threats: 2 },
-    { time: 'T-1h', launches: 28, missions: 71, threats: 3 },
-    { time: 'NOW', launches: 30, missions: 75, threats: 2 },
-  ])
+  const [data, setData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setMounted(true)
 
-    const interval = setInterval(() => {
-      setData(prev => {
-        const newData = [...prev]
-        newData.shift()
-        const last = newData[newData.length - 1]
-        const now = new Date()
-        newData.push({
-          time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          launches: last.launches + Math.floor(Math.random() * 5 - 2),
-          missions: last.missions + Math.floor(Math.random() * 8 - 4),
-          threats: Math.max(0, last.threats + Math.floor(Math.random() * 3 - 1)),
-        })
-        return newData
-      })
-    }, 5000)
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch('/api/analytics/overview')
+        if (response.ok) {
+          const analytics = await response.json()
+
+          // Initialize with current data point
+          const initialData = []
+          const now = new Date()
+
+          for (let i = 6; i >= 0; i--) {
+            const time = new Date(now.getTime() - i * 600000) // 10-minute intervals
+            initialData.push({
+              time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              launches: Math.floor(analytics.launches?.total * (0.7 + i * 0.05) || 10 + i * 2),
+              missions: Math.floor((analytics.launches?.total + analytics.asteroids?.total) * (0.8 + i * 0.03) || 40 + i * 3),
+              threats: Math.floor((analytics.asteroids?.hazardous + analytics.space_weather?.total_alerts) * (0.6 + i * 0.1) || Math.max(0, 5 - i)),
+            })
+          }
+
+          setData(initialData)
+        }
+      } catch (err) {
+        console.error('Error fetching activity data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInitialData()
+
+    // Update periodically with live data
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/analytics/overview')
+        if (response.ok) {
+          const analytics = await response.json()
+
+          setData(prev => {
+            const newData = [...prev]
+            newData.shift()
+            const now = new Date()
+            newData.push({
+              time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              launches: analytics.launches?.total || 0,
+              missions: analytics.launches?.total + analytics.asteroids?.total || 0,
+              threats: (analytics.asteroids?.hazardous || 0) + (analytics.space_weather?.total_alerts || 0),
+            })
+            return newData
+          })
+        }
+      } catch (err) {
+        console.error('Error updating activity:', err)
+      }
+    }, 60000) // Update every minute
 
     return () => clearInterval(interval)
   }, [])
@@ -66,6 +99,17 @@ export default function ActivityChart() {
       )
     }
     return null
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent>
+          <Skeleton variant="text" width="50%" height={30} sx={{ mb: 2 }} />
+          <Skeleton variant="rectangular" height={250} />
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -116,7 +160,7 @@ export default function ActivityChart() {
               stroke="#ff00ff"
               strokeWidth={2}
               fill="url(#colorMissions)"
-              name="Missions"
+              name="Combined Data"
             />
             <Area
               type="monotone"
@@ -140,7 +184,7 @@ export default function ActivityChart() {
         <Box sx={{ display: 'flex', gap: 3, mt: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
           {[
             { label: 'LAUNCHES', color: '#00ffff' },
-            { label: 'MISSIONS', color: '#ff00ff' },
+            { label: 'COMBINED', color: '#ff00ff' },
             { label: 'THREATS', color: '#ffaa00' },
           ].map((item, index) => (
             <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

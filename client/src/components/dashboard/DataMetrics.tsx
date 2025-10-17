@@ -2,75 +2,99 @@
 
 import PublicIcon from '@mui/icons-material/Public'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
-import SatelliteAltIcon from '@mui/icons-material/SatelliteAlt'
 import SecurityIcon from '@mui/icons-material/Security'
 import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
-import { Box, Card, CardContent, Grid, Typography } from '@mui/material'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import { Box, Card, CardContent, Grid, Skeleton, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 
-interface MetricData {
-  title: string
-  value: string
-  change: string
-  isPositive: boolean
-  icon: React.ReactNode
-  color: string
+interface AnalyticsData {
+  launches: {
+    total: number
+    providers: number
+  }
+  asteroids: {
+    total: number
+    hazardous: number
+  }
+  space_weather: {
+    total_alerts: number
+  }
+  threat_level: string
 }
 
 export default function DataMetrics() {
-  const [metrics, setMetrics] = useState<MetricData[]>([
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch('/api/analytics/overview')
+        if (response.ok) {
+          const data = await response.json()
+          setAnalytics(data)
+        }
+      } catch (err) {
+        console.error('Error fetching analytics:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnalytics()
+    // Refresh every 2 minutes
+    const interval = setInterval(fetchAnalytics, 120000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const metrics = [
     {
-      title: 'ACTIVE MISSIONS',
-      value: '847',
-      change: '+12.5%',
+      title: 'UPCOMING LAUNCHES',
+      value: analytics?.launches.total.toString() || '0',
+      change: `${analytics?.launches.providers || 0} Providers`,
       isPositive: true,
       icon: <RocketLaunchIcon />,
       color: '#00ffff',
     },
     {
-      title: 'SATELLITES TRACKED',
-      value: '5,432',
-      change: '+8.2%',
-      isPositive: true,
-      icon: <SatelliteAltIcon />,
-      color: '#ff00ff',
-    },
-    {
       title: 'NEAR-EARTH OBJECTS',
-      value: '127',
-      change: '-3.1%',
-      isPositive: false,
+      value: analytics?.asteroids.total.toString() || '0',
+      change: `${analytics?.asteroids.hazardous || 0} Hazardous`,
+      isPositive: (analytics?.asteroids.hazardous || 0) === 0,
       icon: <PublicIcon />,
       color: '#ffaa00',
     },
     {
-      title: 'THREAT LEVEL',
-      value: 'LOW',
-      change: 'NOMINAL',
-      isPositive: true,
-      icon: <SecurityIcon />,
-      color: '#00ff00',
+      title: 'SPACE WEATHER ALERTS',
+      value: analytics?.space_weather.total_alerts.toString() || '0',
+      change: 'Active Notifications',
+      isPositive: (analytics?.space_weather.total_alerts || 0) < 5,
+      icon: <WarningAmberIcon />,
+      color: '#ff00ff',
     },
-  ])
+    {
+      title: 'THREAT LEVEL',
+      value: analytics?.threat_level || 'UNKNOWN',
+      change: 'NOMINAL',
+      isPositive: analytics?.threat_level === 'LOW',
+      icon: <SecurityIcon />,
+      color: analytics?.threat_level === 'LOW' ? '#00ff00' : analytics?.threat_level === 'MEDIUM' ? '#ffaa00' : '#ff0055',
+    },
+  ]
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(prev => prev.map(metric => {
-        if (metric.title === 'ACTIVE MISSIONS') {
-          const val = parseInt(metric.value) + Math.floor(Math.random() * 3 - 1)
-          return { ...metric, value: val.toString() }
-        }
-        if (metric.title === 'SATELLITES TRACKED') {
-          const val = parseInt(metric.value.replace(',', '')) + Math.floor(Math.random() * 5 - 2)
-          return { ...metric, value: val.toLocaleString() }
-        }
-        return metric
-      }))
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [])
+  if (loading) {
+    return (
+      <Grid container spacing={2}>
+        {[...Array(4)].map((_, idx) => (
+          <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={idx}>
+            <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 1 }} />
+          </Grid>
+        ))}
+      </Grid>
+    )
+  }
 
   return (
     <Grid container spacing={2}>
@@ -136,12 +160,12 @@ export default function DataMetrics() {
                 {metric.isPositive ? (
                   <TrendingUpIcon sx={{ fontSize: 14, color: 'success.main' }} />
                 ) : (
-                  <TrendingDownIcon sx={{ fontSize: 14, color: 'error.main' }} />
+                  <TrendingDownIcon sx={{ fontSize: 14, color: 'warning.main' }} />
                 )}
                 <Typography
                   variant="caption"
                   sx={{
-                    color: metric.isPositive ? 'success.main' : 'error.main',
+                    color: 'text.secondary',
                     fontFamily: 'Share Tech Mono',
                     fontSize: '0.7rem',
                   }}

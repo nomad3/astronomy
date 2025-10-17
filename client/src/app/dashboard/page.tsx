@@ -16,6 +16,7 @@ import SpaceWeather from '@/components/dashboard/SpaceWeather'
 import SystemHealthPanel from '@/components/dashboard/SystemHealthPanel'
 import SystemMonitor from '@/components/dashboard/SystemMonitor'
 import TelemetryPanel from '@/components/dashboard/TelemetryPanel'
+import CelestialObjectExplorer from '@/components/visualizations/CelestialObjectExplorer'
 import ISSTrackerMap from '@/components/visualizations/ISSTrackerMap'
 import SolarSystem from '@/components/visualizations/SolarSystem'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -165,6 +166,9 @@ export default function Dashboard() {
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12 }}>
                   <SolarSystem />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <CelestialObjectExplorer />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TelemetryPanel />
