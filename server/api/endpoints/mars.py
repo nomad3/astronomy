@@ -1,8 +1,23 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import StreamingResponse
+import httpx
+
+router = APIRouter()
 
 from services.mars import fetch_mars_rover_photos, fetch_mars_weather, fetch_epic_images
 
-router = APIRouter()
+@router.get("/mars/image-proxy")
+async def proxy_mars_image(image_url: str):
+    """Proxies Mars images to avoid CORS issues."""
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(image_url)
+            response.raise_for_status()
+            return StreamingResponse(content=response.iter_bytes(), media_type=response.headers['Content-Type'])
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(status_code=exc.response.status_code, detail=f"Error fetching image: {exc.response.status_code}")
+        except httpx.RequestError as exc:
+            raise HTTPException(status_code=500, detail=f"Error requesting image: {exc.request.url!r}")
 
 
 @router.get("/mars/rover-photos")

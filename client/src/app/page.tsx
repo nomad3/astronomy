@@ -15,23 +15,31 @@ export default function LandingPage() {
   const [countdown, setCountdown] = useState(3)
   const [showCountdown, setShowCountdown] = useState(false)
 
+  const [navigateToDashboard, setNavigateToDashboard] = useState(false);
+
   useEffect(() => {
-    setShow(true)
-  }, [])
+    setShow(true);
+  }, []);
+
+  useEffect(() => {
+    if (navigateToDashboard) {
+      router.push('/dashboard');
+    }
+  }, [navigateToDashboard, router]);
 
   const handleLaunch = () => {
-    setShowCountdown(true)
+    setShowCountdown(true);
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer)
-          router.push('/dashboard')
-          return 0
+          clearInterval(timer);
+          setNavigateToDashboard(true);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
-  }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   if (showCountdown) {
     return (

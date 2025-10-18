@@ -1,174 +1,74 @@
-'use client'
+'use client';
 
-import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety'
-import MemoryIcon from '@mui/icons-material/Memory'
-import NetworkCheckIcon from '@mui/icons-material/NetworkCheck'
-import SpeedIcon from '@mui/icons-material/Speed'
-import StorageIcon from '@mui/icons-material/Storage'
-import { Box, Card, CardContent, LinearProgress, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import { Cpu, MemoryStick, Network, Server } from 'lucide-react';
 
-interface SystemMetric {
-  label: string
-  value: number
-  icon: React.ReactNode
-  color: string
-  unit: string
-}
+const MetricGauge = ({ label, value, icon, color, unit }) => {
+  const getStatusColor = (val) => {
+    if (val >= 85) return '#c62828';
+    if (val >= 70) return '#ff8f00';
+    return '#2e7d32';
+  };
+
+  return (
+    <Box sx={{ textAlign: 'center' }}>
+      <Box sx={{ width: 100, height: 100, margin: '0 auto' }}>
+        <CircularProgressbar
+          value={value}
+          text={`${value.toFixed(0)}${unit}`}
+          styles={buildStyles({
+            pathColor: getStatusColor(value),
+            textColor: '#e6edf3',
+            trailColor: '#30363d',
+          })}
+        />
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mt: 1 }}>
+        {icon}
+        <Typography variant="caption">{label}</Typography>
+      </Box>
+    </Box>
+  );
+};
 
 export default function SystemHealthPanel() {
-  const [mounted, setMounted] = useState(false)
-  const [lastCheck, setLastCheck] = useState<string>('')
-  const [metrics, setMetrics] = useState<SystemMetric[]>([
-    { label: 'CPU USAGE', value: 45, icon: <MemoryIcon />, color: '#00ffff', unit: '%' },
-    { label: 'MEMORY', value: 62, icon: <StorageIcon />, color: '#ff00ff', unit: '%' },
-    { label: 'NETWORK', value: 88, icon: <NetworkCheckIcon />, color: '#00ff00', unit: '%' },
-    { label: 'BANDWIDTH', value: 73, icon: <SpeedIcon />, color: '#ffaa00', unit: 'Mbps' },
-  ])
+  const [metrics, setMetrics] = useState([
+    { label: 'CPU', value: 45, icon: <Cpu size={16} />, unit: '%' },
+    { label: 'Memory', value: 62, icon: <MemoryStick size={16} />, unit: '%' },
+    { label: 'Network', value: 88, icon: <Network size={16} />, unit: '%' },
+    { label: 'Server', value: 73, icon: <Server size={16} />, unit: '%' },
+  ]);
 
   useEffect(() => {
-    setMounted(true)
-    setLastCheck(new Date().toLocaleTimeString())
-
     const interval = setInterval(() => {
       setMetrics(prev =>
         prev.map(metric => ({
           ...metric,
           value: Math.max(20, Math.min(95, metric.value + Math.random() * 10 - 5)),
         }))
-      )
-      setLastCheck(new Date().toLocaleTimeString())
-    }, 2000)
+      );
+    }, 2000);
 
-    return () => clearInterval(interval)
-  }, [])
-
-  const getStatusColor = (value: number) => {
-    if (value >= 85) return '#ff0055'
-    if (value >= 70) return '#ffaa00'
-    return '#00ff00'
-  }
-
-  const getStatusText = (value: number) => {
-    if (value >= 85) return 'CRITICAL'
-    if (value >= 70) return 'WARNING'
-    return 'NOMINAL'
-  }
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Card>
       <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <HealthAndSafetyIcon sx={{ color: 'success.main' }} />
-          <Typography
-            variant="h6"
-            sx={{
-              color: 'success.main',
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
-              textShadow: '0 0 10px rgba(0, 255, 0, 0.5)',
-            }}
-          >
-            SYSTEM HEALTH
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          System Health
+        </Typography>
+        <Grid container spacing={2}>
           {metrics.map((metric, index) => (
-            <Box key={index}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box sx={{ color: metric.color, '& svg': { fontSize: 18 } }}>{metric.icon}</Box>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: 'text.secondary',
-                      fontSize: '0.7rem',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    {metric.label}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: metric.color,
-                      fontFamily: 'Share Tech Mono',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {metric.value.toFixed(1)}{metric.unit}
-                  </Typography>
-                  <Box
-                    sx={{
-                      px: 1,
-                      py: 0.3,
-                      bgcolor: `${getStatusColor(metric.value)}20`,
-                      border: '1px solid',
-                      borderColor: getStatusColor(metric.value),
-                      borderRadius: 0.5,
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: getStatusColor(metric.value),
-                        fontSize: '0.6rem',
-                        fontFamily: 'Share Tech Mono',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {getStatusText(metric.value)}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              <LinearProgress
-                variant="determinate"
-                value={metric.value}
-                sx={{
-                  height: 8,
-                  borderRadius: 1,
-                  bgcolor: 'rgba(0, 0, 0, 0.3)',
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: metric.color,
-                    boxShadow: `0 0 10px ${metric.color}`,
-                    borderRadius: 1,
-                  },
-                }}
-              />
-            </Box>
+            <Grid item xs={6} key={index}>
+              <MetricGauge {...metric} />
+            </Grid>
           ))}
-        </Box>
-
-        <Box
-          sx={{
-            mt: 3,
-            p: 2,
-            bgcolor: 'rgba(0, 255, 0, 0.05)',
-            border: '1px solid rgba(0, 255, 0, 0.3)',
-            borderRadius: 1,
-            textAlign: 'center',
-          }}
-        >
-          <Typography
-            variant="h6"
-            sx={{
-              color: 'success.main',
-              fontFamily: 'Share Tech Mono',
-              mb: 0.5,
-            }}
-          >
-            ALL SYSTEMS OPERATIONAL
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            LAST CHECK: {mounted ? lastCheck : '--:--:--'}
-          </Typography>
-        </Box>
+        </Grid>
       </CardContent>
     </Card>
-  )
+  );
 }

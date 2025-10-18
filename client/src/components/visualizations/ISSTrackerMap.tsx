@@ -1,63 +1,42 @@
-'use client'
+'use client';
 
-import React, { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic'
-import { Card, CardContent, Typography, Box } from '@mui/material'
+import { Box, Card, CardContent, Typography } from '@mui/material';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-// Dynamically import the Map component with SSR disabled
-const Map = dynamic(() => import('./Map'), {
-  ssr: false,
-  loading: () => <Typography>Loading map...</Typography>
+// Dummy ISS position data
+const issPosition = { lat: 51.505, lng: -0.09 };
+
+const issIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  shadowSize: [41, 41],
 });
 
-interface IssPosition {
-  latitude: number;
-  longitude: number;
-}
-
 export default function ISSTrackerMap() {
-  const [issPosition, setIssPosition] = useState<IssPosition | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchIssPosition = async () => {
-      try {
-        const response = await fetch('/api/iss-tracking');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: IssPosition = await response.json();
-        setIssPosition(data);
-      } catch (e: any) {
-        setError(e.message);
-      }
-    };
-
-    fetchIssPosition(); // Fetch immediately on mount
-    const interval = setInterval(fetchIssPosition, 5000); // Then fetch every 5 seconds
-
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, []);
-
   return (
     <Card>
       <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
-          ISS Live Location
+        <Typography variant="h6" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          🛰️ ISS Tracker
         </Typography>
-        {error && <Typography color="error">Error: {error}</Typography>}
-        {issPosition ? (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2">Latitude: {issPosition.latitude.toFixed(4)}</Typography>
-            <Typography variant="body2">Longitude: {issPosition.longitude.toFixed(4)}</Typography>
-            <Box sx={{ mt: 2, height: 300 }}>
-              <Map lat={issPosition.latitude} lng={issPosition.longitude} />
-            </Box>
-          </Box>
-        ) : (
-          <Typography>Loading ISS position...</Typography>
-        )}
+        <Box sx={{ height: 400, borderRadius: 2, overflow: 'hidden' }}>
+          <MapContainer center={[issPosition.lat, issPosition.lng]} zoom={3} style={{ height: '100%', width: '100%' }}>
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            />
+            <Marker position={[issPosition.lat, issPosition.lng]} icon={issIcon}>
+              <Popup>International Space Station</Popup>
+            </Marker>
+          </MapContainer>
+        </Box>
       </CardContent>
     </Card>
-  )
+  );
 }
+

@@ -6,97 +6,109 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#00ffff',
-      light: '#64ffff',
-      dark: '#00b8b8',
+      main: '#1a237e', // A deep blue
     },
     secondary: {
-      main: '#ff00ff',
-      light: '#ff64ff',
-      dark: '#b800b8',
+      main: '#607d8b', // A greyish blue
     },
-    success: {
-      main: '#00ff00',
-    },
-    warning: {
-      main: '#ffaa00',
-    },
-    error: {
-      main: '#ff0055',
-    },
-    info: {
-      main: '#00aaff',
+    accent: {
+      main: '#00e5ff', // A vibrant cyan
     },
     background: {
-      default: '#0a0e27',
-      paper: '#0f1433',
+      default: '#0d1117', // A darker shade of blue-grey
+      paper: '#161b22',
     },
     text: {
-      primary: '#e0f4ff',
-      secondary: '#8da9c4',
+      primary: '#e6edf3',
+      secondary: '#7d8590',
+    },
+    success: {
+      main: '#2e7d32',
+    },
+    warning: {
+      main: '#ff8f00',
+    },
+    error: {
+      main: '#c62828',
     },
   },
   typography: {
-    fontFamily: '"Rajdhani", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: '"Exo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     h1: {
-      fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontWeight: 900,
-      letterSpacing: '0.08em',
+      fontFamily: '"Exo", sans-serif',
+      fontWeight: 800,
     },
     h2: {
-      fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontWeight: 800,
-      letterSpacing: '0.08em',
+      fontFamily: '"Exo", sans-serif',
+      fontWeight: 700,
     },
     h3: {
-      fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontWeight: 700,
-      letterSpacing: '0.05em',
+      fontFamily: '"Exo", sans-serif',
+      fontWeight: 600,
     },
     h4: {
-      fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontWeight: 700,
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase',
+      fontFamily: '"Exo", sans-serif',
+      fontWeight: 500,
     },
     h5: {
-      fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontWeight: 600,
-      letterSpacing: '0.08em',
+      fontFamily: '"Exo", sans-serif',
+      fontWeight: 400,
     },
     h6: {
-      fontFamily: '"Orbitron", "Rajdhani", sans-serif',
-      fontWeight: 600,
-      letterSpacing: '0.05em',
+      fontFamily: '"Exo", sans-serif',
+      fontWeight: 400,
     },
     body1: {
-      fontFamily: '"Rajdhani", -apple-system, sans-serif',
+      fontFamily: '"Exo", sans-serif',
       fontSize: '1rem',
     },
     body2: {
-      fontFamily: '"Share Tech Mono", "Courier New", monospace',
+      fontFamily: '"Exo", sans-serif',
       fontSize: '0.875rem',
     },
     caption: {
-      fontFamily: '"Share Tech Mono", "Courier New", monospace',
+      fontFamily: '"Exo", sans-serif',
     },
   },
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundImage: 'linear-gradient(145deg, rgba(15, 20, 51, 0.9), rgba(10, 14, 39, 0.95))',
-          border: '1px solid rgba(0, 255, 255, 0.3)',
-          boxShadow: '0 0 20px rgba(0, 255, 255, 0.1), inset 0 0 20px rgba(0, 255, 255, 0.05)',
+          backgroundColor: '#161b22',
+          border: '1px solid #30363d',
+          boxShadow: 'none',
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundImage: 'linear-gradient(to bottom, rgba(15, 20, 51, 0.95), rgba(10, 14, 39, 0.98))',
-          borderBottom: '2px solid rgba(0, 255, 255, 0.5)',
-          boxShadow: '0 4px 30px rgba(0, 255, 255, 0.2)',
+          backgroundColor: 'transparent',
+          borderBottom: 'none',
+          boxShadow: 'none',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '6px',
+          textTransform: 'none',
+        },
+        contained: {
+          backgroundColor: '#21262d',
+          color: '#e6edf3',
+          '&:hover': {
+            backgroundColor: '#30363d',
+          },
+        },
+        outlined: {
+          borderColor: '#30363d',
+          color: '#e6edf3',
+          '&:hover': {
+            borderColor: '#e6edf3',
+            color: '#e6edf3',
+          },
         },
       },
     },

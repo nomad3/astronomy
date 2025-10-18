@@ -1,95 +1,74 @@
-'use client'
+'use client';
 
-import { Box, Card, CardContent, LinearProgress, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
-import StatusIndicator from '../ui/StatusIndicator'
+import { Box, Card, CardContent, LinearProgress, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import StatusIndicator from '../ui/StatusIndicator';
 
-export default function SystemMonitor() {
-  const [time, setTime] = useState<Date | null>(null)
-  const [uptime, setUptime] = useState(0)
-  const [mounted, setMounted] = useState(false)
+const Uptime = () => {
+  const [uptime, setUptime] = useState(0);
 
   useEffect(() => {
-    setMounted(true)
-    setTime(new Date())
-
-    const timer = setInterval(() => {
-      setTime(new Date())
-      setUptime(prev => prev + 1)
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
+    const timer = setInterval(() => setUptime(prev => prev + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const formatUptime = (seconds: number) => {
-    const days = Math.floor(seconds / 86400)
-    const hours = Math.floor((seconds % 86400) / 3600)
-    const mins = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${days}D ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${d}D ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <Box>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        System Uptime: {formatUptime(uptime)}
+      </Typography>
+      <LinearProgress variant="determinate" value={100} sx={{ mt: 1, height: 8, borderRadius: 4 }} />
+    </Box>
+  );
+};
+
+export default function SystemMonitor() {
+  const [time, setTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setTime(new Date());
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <Card>
       <CardContent>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{
-            color: 'primary.main',
-            textTransform: 'uppercase',
-            letterSpacing: '0.15em',
-            textShadow: '0 0 10px rgba(0, 255, 255, 0.5)',
-          }}
-        >
-          ⚡ SYSTEM STATUS
+        <Typography variant="h6" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          ⚡ System Status
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-          <StatusIndicator label="CORE SYSTEMS" status="online" value="OPERATIONAL" />
-          <StatusIndicator label="NAVIGATION" status="online" value="LOCKED" />
-          <StatusIndicator label="SENSORS" status="online" value="ACTIVE" />
-          <StatusIndicator label="COMMUNICATIONS" status="online" value="NOMINAL" />
+          <StatusIndicator label="Core Systems" status="online" value="Operational" />
+          <StatusIndicator label="Navigation" status="online" value="Locked" />
+          <StatusIndicator label="Sensors" status="online" value="Active" />
+          <StatusIndicator label="Communications" status="online" value="Nominal" />
         </Box>
 
-        <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(0, 255, 255, 0.05)', border: '1px solid rgba(0, 255, 255, 0.2)' }}>
+        <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-            MISSION CLOCK
+            Mission Clock
           </Typography>
-          {mounted && time ? (
-            <>
-              <Typography variant="h5" sx={{ color: 'primary.main', fontFamily: 'Share Tech Mono', textShadow: '0 0 10px rgba(0, 255, 255, 0.5)' }}>
-                {time.toISOString().split('T')[1].split('.')[0]} UTC
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                DATE: {time.toISOString().split('T')[0]}
-              </Typography>
-            </>
-          ) : (
-            <Typography variant="h5" sx={{ color: 'text.secondary', fontFamily: 'Share Tech Mono' }}>
-              --:--:-- UTC
-            </Typography>
-          )}
+          <Typography variant="h5" sx={{ fontWeight: 500 }}>
+            {time ? `${time.toISOString().split('T')[1].split('.')[0]} UTC` : '--:--:-- UTC'}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {time ? `DATE: ${time.toISOString().split('T')[0]}` : ''}
+          </Typography>
         </Box>
 
         <Box sx={{ mt: 2 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            SYSTEM UPTIME: {formatUptime(uptime)}
-          </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={100}
-            sx={{
-              mt: 1,
-              height: 8,
-              bgcolor: 'rgba(0, 255, 255, 0.1)',
-              '& .MuiLinearProgress-bar': {
-                bgcolor: 'success.main',
-                boxShadow: '0 0 10px rgba(0, 255, 0, 0.5)',
-              },
-            }}
-          />
+          <Uptime />
         </Box>
       </CardContent>
     </Card>
-  )
+  );
 }

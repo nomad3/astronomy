@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardMedia, Typography, Skeleton } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 interface ApodData {
   title: string;
@@ -20,9 +20,7 @@ export default function AstronomyPictureOfTheDay() {
     async function fetchData() {
       try {
         const response = await fetch('/api/astronomy-images/apod');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
         setData(result);
       } catch (e: any) {
@@ -45,7 +43,7 @@ export default function AstronomyPictureOfTheDay() {
           <Skeleton variant="text" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) return <Typography color="error">Error: {error}</Typography>;
@@ -54,20 +52,15 @@ export default function AstronomyPictureOfTheDay() {
   return (
     <Card>
       <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
+        <Typography gutterBottom variant="h6" component="div" sx={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Astronomy Picture of the Day
         </Typography>
       </CardContent>
       {data.media_type === 'image' && (
-        <CardMedia
-          component="img"
-          height="200"
-          image={data.url}
-          alt={data.title}
-        />
+        <CardMedia component="img" height="200" image={data.url} alt={data.title} />
       )}
       <CardContent>
-        <Typography gutterBottom variant="h6" component="div">
+        <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 600 }}>
           {data.title}
         </Typography>
         <Typography variant="body2" color="text.secondary">
