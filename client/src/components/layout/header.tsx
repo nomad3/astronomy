@@ -27,7 +27,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/10 bg-black/50 backdrop-blur-xl px-6">
+    <header className="hidden lg:flex sticky top-0 z-30 h-16 items-center justify-between border-b border-white/10 bg-black/50 backdrop-blur-xl px-6">
       <div>
         <h2 className="text-xl font-semibold text-white">Mission Control</h2>
         <p className="text-sm text-gray-500">Real-time space data monitoring</p>
