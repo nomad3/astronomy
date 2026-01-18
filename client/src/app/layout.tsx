@@ -1,23 +1,40 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import ThemeRegistry from './ThemeRegistry'
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { MobileNav } from "@/components/layout/mobile-nav";
 
 export const metadata: Metadata = {
-  title: 'Space Exploration Dashboard',
-  description: 'A comprehensive space exploration data dashboard',
-}
+  title: "Cosmos - Space Explorer",
+  description: "Real-time space exploration dashboard with NASA data",
+};
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
-      </head>
-      <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+    <html lang="en" className="dark">
+      <body className="font-sans antialiased bg-gradient-space stars">
+        {/* Desktop Sidebar */}
+        <Sidebar />
+
+        {/* Mobile Navigation */}
+        <MobileNav />
+
+        {/* Main Content */}
+        <div className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
+          <Header />
+          <main className="p-4 lg:p-6">{children}</main>
+        </div>
       </body>
     </html>
-  )
+  );
 }
