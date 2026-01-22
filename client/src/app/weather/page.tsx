@@ -37,7 +37,7 @@ export default function WeatherPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const alertTypes = [...new Set(alerts.map(a => a.type))];
+  const alertTypes = [...new Set(alerts.map(a => a.messageType))];
 
   if (loading) {
     return (
@@ -105,7 +105,7 @@ export default function WeatherPage() {
               </CardContent>
             </Card>
             {alertTypes.slice(0, 3).map((type) => {
-              const count = alerts.filter(a => a.type === type).length;
+              const count = alerts.filter(a => a.messageType === type).length;
               const colors = getAlertColor(type);
               const Icon = getAlertIcon(type);
               return (
@@ -125,11 +125,12 @@ export default function WeatherPage() {
           {/* Alert List */}
           <div className="space-y-4">
             {alerts.map((alert) => {
-              const Icon = getAlertIcon(alert.type);
-              const colors = getAlertColor(alert.type);
+              const Icon = getAlertIcon(alert.messageType);
+              const colors = getAlertColor(alert.messageType);
+              const summary = alert.messageBody.split('\n').find(line => line.includes('Summary'))?.replace('## Summary:', '').trim() || alert.messageType;
 
               return (
-                <Card key={alert.id} className={`${colors.border} hover:bg-white/5 transition-colors`}>
+                <Card key={alert.messageID} className={`${colors.border} hover:bg-white/5 transition-colors`}>
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       <div className={`p-3 rounded-xl ${colors.bg}`}>
@@ -138,18 +139,18 @@ export default function WeatherPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
                           <Badge className={`${colors.bg} ${colors.text} ${colors.border}`}>
-                            {alert.type}
+                            {alert.messageType}
                           </Badge>
                           <span className="text-sm text-gray-500">
-                            {formatDateTime(alert.issue_time)}
+                            {formatDateTime(alert.messageIssueTime)}
                           </span>
                         </div>
                         <p className="text-gray-300 mt-3 leading-relaxed">
-                          {alert.message}
+                          {summary}
                         </p>
-                        {alert.link && (
+                        {alert.messageURL && (
                           <a
-                            href={alert.link}
+                            href={alert.messageURL}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 mt-3 text-sm text-blue-400 hover:text-blue-300 transition-colors"

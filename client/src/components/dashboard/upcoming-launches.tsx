@@ -62,10 +62,10 @@ export function UpcomingLaunches() {
               key={launch.id}
               className="flex gap-4 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
-              {launch.image_url && (
+              {launch.image && (
                 <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
                   <Image
-                    src={launch.image_url}
+                    src={launch.image}
                     alt={launch.name}
                     fill
                     className="object-cover"
@@ -79,18 +79,18 @@ export function UpcomingLaunches() {
                   </h4>
                   <Badge
                     variant={
-                      launch.status === "Go" ? "success" :
-                      launch.status === "TBD" ? "warning" : "default"
+                      launch.status === "Go for Launch" ? "success" :
+                      launch.status === "To Be Determined" ? "warning" : "default"
                     }
                     className="flex-shrink-0"
                   >
-                    {getTimeUntil(launch.net)}
+                    {getTimeUntil(launch.window_start)}
                   </Badge>
                 </div>
                 <div className="mt-1 flex items-center gap-3 text-sm text-gray-400">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {formatDateTime(launch.net)}
+                    {formatDateTime(launch.window_start)}
                   </span>
                 </div>
                 <div className="mt-1 flex items-center gap-1 text-sm text-gray-500">

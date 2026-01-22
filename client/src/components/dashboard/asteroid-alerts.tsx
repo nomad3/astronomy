@@ -74,7 +74,7 @@ export function AsteroidAlerts() {
                       {asteroid.name}
                     </h4>
                     <p className="text-xs text-gray-400 mt-1">
-                      {formatDate(asteroid.close_approach_date)} • {formatDistance(asteroid.miss_distance)}
+                      {formatDate(asteroid.close_approach_date)} • {formatDistance(parseFloat(asteroid.miss_distance_km))}
                     </p>
                   </div>
                   <Badge
@@ -88,13 +88,13 @@ export function AsteroidAlerts() {
                   <div>
                     <span className="text-gray-500">Diameter:</span>
                     <span className="text-gray-300 ml-1">
-                      {asteroid.estimated_diameter_min.toFixed(0)}-{asteroid.estimated_diameter_max.toFixed(0)}m
+                      {(asteroid.estimated_diameter_km * 1000).toFixed(0)}m
                     </span>
                   </div>
                   <div>
                     <span className="text-gray-500">Velocity:</span>
                     <span className="text-gray-300 ml-1">
-                      {(asteroid.relative_velocity / 1000).toFixed(1)} km/s
+                      {parseFloat(asteroid.relative_velocity_kms).toFixed(1)} km/s
                     </span>
                   </div>
                 </div>

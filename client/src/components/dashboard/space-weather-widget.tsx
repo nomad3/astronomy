@@ -70,12 +70,12 @@ export function SpaceWeatherWidget() {
         ) : (
           <div className="space-y-3">
             {alerts.slice(0, 4).map((alert) => {
-              const Icon = getAlertIcon(alert.type);
-              const variant = getAlertVariant(alert.type);
+              const Icon = getAlertIcon(alert.messageType);
+              const variant = getAlertVariant(alert.messageType);
 
               return (
                 <div
-                  key={alert.id}
+                  key={alert.messageID}
                   className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex items-start gap-3">
@@ -91,14 +91,14 @@ export function SpaceWeatherWidget() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <Badge variant={variant} className="text-xs">
-                          {alert.type}
+                          {alert.messageType}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-300 mt-1 line-clamp-2">
-                        {alert.message}
+                        {alert.messageBody.split('\n').find(line => line.includes('Summary'))?.replace('## Summary:', '').trim() || alert.messageType}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {formatDateTime(alert.issue_time)}
+                        {formatDateTime(alert.messageIssueTime)}
                       </p>
                     </div>
                   </div>

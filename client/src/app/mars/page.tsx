@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,9 +40,13 @@ export default function MarsPage() {
       api.getMarsWeather(),
     ])
       .then(([photosData, weatherData]) => {
-        setPhotos(photosData);
-        setWeather(weatherData);
-        setSelectedPhoto(null);
+        setPhotos(photosData || []);
+        setWeather(weatherData || []);
+        if (photosData && photosData.length > 0) {
+          setSelectedPhoto(photosData[0]);
+        } else {
+          setSelectedPhoto(null);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -132,20 +135,21 @@ export default function MarsPage() {
 
           {selectedPhoto && (
             <Card className="overflow-hidden">
-              <div className="relative aspect-video">
-                <Image
+              <div className="relative aspect-video bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={selectedPhoto.img_src}
-                  alt={`Mars photo from ${selectedPhoto.rover_name}`}
-                  fill
-                  className="object-contain bg-black"
+                  alt={`Mars photo from ${selectedPhoto.rover}`}
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white font-medium">{selectedPhoto.camera_full_name}</p>
+                    <p className="text-white font-medium">{selectedPhoto.camera}</p>
                     <p className="text-sm text-gray-400">
-                      {selectedPhoto.rover_name} • Sol {selectedPhoto.sol} • {formatDate(selectedPhoto.earth_date)}
+                      {selectedPhoto.rover} • Sol {selectedPhoto.sol} • {formatDate(selectedPhoto.earth_date)}
                     </p>
                   </div>
                   <Badge variant="info">{selectedPhoto.camera_name}</Badge>
@@ -180,11 +184,12 @@ export default function MarsPage() {
                       : "hover:scale-105"
                   }`}
                 >
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={photo.img_src}
                     alt={`Mars ${photo.camera_name}`}
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-1 left-1">
@@ -226,18 +231,18 @@ export default function MarsPage() {
                       <div className="flex items-center gap-2">
                         <Thermometer className="h-3 w-3 text-blue-400" />
                         <span className="text-gray-400">
-                          {day.min_temp}° / {day.max_temp}°C
+                          {day.temperature.mn.toFixed(0)}° / {day.temperature.mx.toFixed(0)}°C
                         </span>
                       </div>
-                      {day.wind_speed && (
+                      {day.wind && (
                         <div className="flex items-center gap-2">
                           <Wind className="h-3 w-3 text-teal-400" />
-                          <span className="text-gray-400">{day.wind_speed} m/s</span>
+                          <span className="text-gray-400">{day.wind.av.toFixed(1)} m/s</span>
                         </div>
                       )}
                       <div className="flex items-center gap-2 col-span-2">
                         <Gauge className="h-3 w-3 text-purple-400" />
-                        <span className="text-gray-400">{day.pressure} Pa</span>
+                        <span className="text-gray-400">{day.pressure.av.toFixed(0)} Pa</span>
                       </div>
                     </div>
                   </div>

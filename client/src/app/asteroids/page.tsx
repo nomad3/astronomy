@@ -131,7 +131,7 @@ function AsteroidCard({ asteroid }: { asteroid: Asteroid }) {
                 Diameter
               </div>
               <p className="text-sm text-white">
-                {asteroid.estimated_diameter_min.toFixed(0)}-{asteroid.estimated_diameter_max.toFixed(0)}m
+                {(asteroid.estimated_diameter_km * 1000).toFixed(0)}m
               </p>
             </div>
             <div className="p-2 rounded-lg bg-white/5">
@@ -140,7 +140,7 @@ function AsteroidCard({ asteroid }: { asteroid: Asteroid }) {
                 Velocity
               </div>
               <p className="text-sm text-white">
-                {(asteroid.relative_velocity / 1000).toFixed(1)} km/s
+                {parseFloat(asteroid.relative_velocity_kms).toFixed(1)} km/s
               </p>
             </div>
           </div>
@@ -148,7 +148,7 @@ function AsteroidCard({ asteroid }: { asteroid: Asteroid }) {
           <div className="p-3 rounded-lg bg-white/5 text-center">
             <p className="text-xs text-gray-500 mb-1">Miss Distance</p>
             <p className="text-lg font-semibold text-amber-400">
-              {formatDistance(asteroid.miss_distance)}
+              {formatDistance(parseFloat(asteroid.miss_distance_km))}
             </p>
           </div>
         </div>
