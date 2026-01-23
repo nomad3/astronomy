@@ -1,0 +1,99 @@
+# Default values for astronomy
+
+namespace: prod
+
+# Container registry configuration
+image:
+  registry: gcr.io/ai-agency-479516
+  pullPolicy: IfNotPresent
+
+# Server (FastAPI backend)
+server:
+  name: astronomy-server
+  replicaCount: 2
+  image:
+    repository: astronomy-server
+    tag: latest
+  port: 8000
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  env:
+    NASA_API_KEY: ""  # Set via --set or secrets
+
+# Client (Next.js frontend)
+client:
+  name: astronomy-client
+  replicaCount: 2
+  image:
+    repository: astronomy-client
+    tag: latest
+  port: 3000
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# PostgreSQL database
+postgresql:
+  enabled: true
+  name: astronomy-db
+  image:
+    repository: postgres
+    tag: "13-alpine"
+  port: 5432
+  auth:
+    username: astronomy
+    password: ""  # Set via --set or secrets
+    database: astronomy
+  storage:
+    size: 10Gi
+    storageClass: standard-rwo
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Redis cache
+redis:
+  enabled: true
+  name: astronomy-redis
+  image:
+    repository: redis
+    tag: "6-alpine"
+  port: 6379
+  storage:
+    size: 1Gi
+    storageClass: standard-rwo
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: ""
+  host: space.agentprovision.com
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: ""
+  tls:
+    enabled: false
+    secretName: astronomy-tls
+
+# Service configuration
+service:
+  type: ClusterIP

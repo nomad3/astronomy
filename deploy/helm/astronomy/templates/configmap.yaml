@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "astronomy.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "astronomy.labels" . | nindent 4 }}
+data:
+  POSTGRES_USER: {{ .Values.postgresql.auth.username | quote }}
+  POSTGRES_DB: {{ .Values.postgresql.auth.database | quote }}
+  NEXT_PUBLIC_API_URL: "/api"

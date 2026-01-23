@@ -76,13 +76,14 @@ export default function LaunchesPage() {
               className="overflow-hidden hover:border-white/20 transition-all"
             >
               <CardContent className="p-0">
-                {launch.image_url && (
+                {launch.image && (
                   <div className="relative h-48 w-full overflow-hidden">
                     <Image
-                      src={launch.image_url}
+                      src={launch.image}
                       alt={launch.name}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4">
@@ -101,7 +102,7 @@ export default function LaunchesPage() {
                     </div>
                     <div className="absolute top-4 right-4">
                       <Badge variant="info" className="font-mono">
-                        {getTimeUntil(launch.net)}
+                        {getTimeUntil(launch.window_start)}
                       </Badge>
                     </div>
                   </div>
@@ -111,11 +112,11 @@ export default function LaunchesPage() {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2 text-gray-400">
                       <Calendar className="h-4 w-4" />
-                      <span>{formatDateTime(launch.net)}</span>
+                      <span>{formatDateTime(launch.window_start)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400">
                       <Clock className="h-4 w-4" />
-                      <span>{getTimeUntil(launch.net)}</span>
+                      <span>{getTimeUntil(launch.window_start)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-400 col-span-2">
                       <MapPin className="h-4 w-4 flex-shrink-0" />
@@ -135,10 +136,10 @@ export default function LaunchesPage() {
                           </div>
                         </div>
                         <div>
-                          <p className="text-gray-500 text-xs">Vehicle</p>
+                          <p className="text-gray-500 text-xs">Orbit</p>
                           <div className="flex items-center gap-2 text-white mt-1">
                             <Rocket className="h-4 w-4 text-purple-400" />
-                            {launch.vehicle}
+                            {launch.orbit || "N/A"}
                           </div>
                         </div>
                       </div>

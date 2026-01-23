@@ -1,0 +1,13 @@
+apiVersion: v2
+name: astronomy
+description: Astronomy Dashboard - Space exploration data visualization
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - astronomy
+  - nasa
+  - space
+  - dashboard
+maintainers:
+  - name: nomade
