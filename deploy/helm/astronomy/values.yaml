@@ -10,10 +10,10 @@ image:
 # Server (FastAPI backend)
 server:
   name: astronomy-server
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: astronomy-server
-    tag: latest
+    tag: "20260123093004"
   port: 8000
   resources:
     requests:
@@ -28,7 +28,7 @@ server:
 # Client (Next.js frontend)
 client:
   name: astronomy-client
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: astronomy-client
     tag: latest
