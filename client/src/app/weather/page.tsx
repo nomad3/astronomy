@@ -186,28 +186,62 @@ export default function WeatherPage() {
   );
 }
 
+// Parse markdown-like content from NASA DONKI into structured sections
+function parseMessageBody(body: string) {
+  const sections: { title: string | null; content: string }[] = [];
+  let currentSection: { title: string | null; content: string[] } = { title: null, content: [] };
+
+  const lines = body.split("\n");
+
+  for (const line of lines) {
+    // Check for ## headers
+    const headerMatch = line.match(/^##\s*(.+)$/);
+    if (headerMatch) {
+      // Save previous section if it has content
+      if (currentSection.content.length > 0 || currentSection.title) {
+        sections.push({
+          title: currentSection.title,
+          content: currentSection.content.join("\n").trim(),
+        });
+      }
+      // Start new section
+      currentSection = { title: headerMatch[1].trim(), content: [] };
+    } else if (line.trim() !== "" && !line.startsWith("##")) {
+      currentSection.content.push(line);
+    }
+  }
+
+  // Add final section
+  if (currentSection.content.length > 0 || currentSection.title) {
+    sections.push({
+      title: currentSection.title,
+      content: currentSection.content.join("\n").trim(),
+    });
+  }
+
+  return sections;
+}
+
+// Get a clean summary without markdown characters
+function getCleanSummary(body: string): string {
+  return body
+    .replace(/##\s*/g, "")  // Remove ## headers
+    .replace(/\n+/g, " ")   // Replace newlines with spaces
+    .trim();
+}
+
 function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
   const [expanded, setExpanded] = useState(false);
   const Icon = getAlertIcon(alert.messageType);
   const colors = getAlertColor(alert.messageType);
 
-  // Parse the message body to extract key information
   const messageBody = alert.messageBody || "";
-  const lines = messageBody.split("\n").filter(line => line.trim());
+  const sections = parseMessageBody(messageBody);
+  const cleanSummary = getCleanSummary(messageBody);
 
-  // Get a summary (first few meaningful lines)
-  const summaryLines = lines.slice(0, 3);
-  const hasMore = lines.length > 3;
-
-  // Extract any key-value pairs from the message
-  const extractedData: { label: string; value: string }[] = [];
-  lines.forEach(line => {
-    // Look for patterns like "Label: Value" or "Label = Value"
-    const match = line.match(/^([A-Za-z\s]+)[:=]\s*(.+)$/);
-    if (match && match[1].length < 30) {
-      extractedData.push({ label: match[1].trim(), value: match[2].trim() });
-    }
-  });
+  // Extract Activity ID if present
+  const activityIdMatch = messageBody.match(/Activity ID:\s*([^\n]+)/i);
+  const activityId = activityIdMatch ? activityIdMatch[1].trim() : null;
 
   return (
     <div className={`rounded-lg ${colors.bg} border ${colors.border} overflow-hidden`}>
@@ -240,17 +274,15 @@ function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
             </div>
 
             {/* Summary preview */}
-            {!expanded && summaryLines.length > 0 && (
+            {!expanded && cleanSummary && (
               <div className="mt-3">
                 <p className="text-sm text-gray-300 line-clamp-2">
-                  {summaryLines.join(" ").substring(0, 200)}
-                  {summaryLines.join(" ").length > 200 && "..."}
+                  {cleanSummary.substring(0, 200)}
+                  {cleanSummary.length > 200 && "..."}
                 </p>
-                {hasMore && (
-                  <span className="text-xs text-gray-500 mt-1 inline-block">
-                    Click to expand
-                  </span>
-                )}
+                <span className="text-xs text-gray-500 mt-1 inline-block">
+                  Click to expand
+                </span>
               </div>
             )}
           </div>
@@ -260,26 +292,30 @@ function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
       {/* Expanded content */}
       {expanded && (
         <div className="px-4 pb-4 border-t border-white/10">
-          {/* Key data points if available */}
-          {extractedData.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 mb-4">
-              {extractedData.slice(0, 6).map((item, idx) => (
-                <div key={idx} className="p-2 rounded bg-black/20">
-                  <p className="text-xs text-gray-500">{item.label}</p>
-                  <p className="text-sm text-white font-mono truncate">{item.value}</p>
-                </div>
-              ))}
+          {/* Activity ID if present */}
+          {activityId && (
+            <div className="mt-4 p-3 rounded bg-black/20">
+              <p className="text-xs text-gray-500">Activity ID</p>
+              <p className="text-sm text-white font-mono">{activityId}</p>
             </div>
           )}
 
-          {/* Full message body */}
-          <div className="mt-4 p-4 rounded-lg bg-black/30">
-            <h5 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
-              Full Report
-            </h5>
-            <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
-              {messageBody || "No detailed information available."}
-            </pre>
+          {/* Parsed sections */}
+          <div className="mt-4 space-y-4">
+            {sections.map((section, idx) => (
+              <div key={idx} className="p-4 rounded-lg bg-black/30">
+                {section.title && (
+                  <h5 className="text-sm font-semibold text-white mb-2 pb-2 border-b border-white/10">
+                    {section.title}
+                  </h5>
+                )}
+                {section.content && (
+                  <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {section.content}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* External link */}
