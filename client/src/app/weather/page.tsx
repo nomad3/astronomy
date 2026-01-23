@@ -186,47 +186,36 @@ export default function WeatherPage() {
   );
 }
 
-// Parse markdown-like content from NASA DONKI into structured sections
-function parseMessageBody(body: string) {
-  const sections: { title: string | null; content: string }[] = [];
-  let currentSection: { title: string | null; content: string[] } = { title: null, content: [] };
+// Extract a summary from the message body
+function extractSummary(body: string): string | null {
+  if (!body) return null;
 
-  const lines = body.split("\n");
-
-  for (const line of lines) {
-    // Check for ## headers
-    const headerMatch = line.match(/^##\s*(.+)$/);
-    if (headerMatch) {
-      // Save previous section if it has content
-      if (currentSection.content.length > 0 || currentSection.title) {
-        sections.push({
-          title: currentSection.title,
-          content: currentSection.content.join("\n").trim(),
-        });
-      }
-      // Start new section
-      currentSection = { title: headerMatch[1].trim(), content: [] };
-    } else if (line.trim() !== "" && !line.startsWith("##")) {
-      currentSection.content.push(line);
-    }
+  // Try to find Summary section content
+  const summaryMatch = body.match(/##\s*Summary[:\s]*\n([\s\S]*?)(?=\n##|$)/i);
+  if (summaryMatch && summaryMatch[1].trim()) {
+    return summaryMatch[1].trim();
   }
 
-  // Add final section
-  if (currentSection.content.length > 0 || currentSection.title) {
-    sections.push({
-      title: currentSection.title,
-      content: currentSection.content.join("\n").trim(),
-    });
-  }
-
-  return sections;
+  return null;
 }
 
-// Get a clean summary without markdown characters
-function getCleanSummary(body: string): string {
+// Get the alert type full name
+function getAlertTypeName(type: string): string {
+  const names: Record<string, string> = {
+    CME: "Coronal Mass Ejection",
+    FLR: "Solar Flare",
+    SEP: "Solar Energetic Particles",
+    RBE: "Radiation Belt Enhancement",
+    GST: "Geomagnetic Storm",
+    Report: "Space Weather Report",
+  };
+  return names[type] || type;
+}
+
+// Clean up the message body for display
+function formatMessageBody(body: string): string {
   return body
-    .replace(/##\s*/g, "")  // Remove ## headers
-    .replace(/\n+/g, " ")   // Replace newlines with spaces
+    .replace(/^##\s*/gm, "")  // Remove ## at start of lines
     .trim();
 }
 
@@ -236,12 +225,9 @@ function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
   const colors = getAlertColor(alert.messageType);
 
   const messageBody = alert.messageBody || "";
-  const sections = parseMessageBody(messageBody);
-  const cleanSummary = getCleanSummary(messageBody);
-
-  // Extract Activity ID if present
-  const activityIdMatch = messageBody.match(/Activity ID:\s*([^\n]+)/i);
-  const activityId = activityIdMatch ? activityIdMatch[1].trim() : null;
+  const summary = extractSummary(messageBody);
+  const formattedBody = formatMessageBody(messageBody);
+  const alertTypeName = getAlertTypeName(alert.messageType);
 
   return (
     <div className={`rounded-lg ${colors.bg} border ${colors.border} overflow-hidden`}>
@@ -260,6 +246,9 @@ function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
                 <Badge className={`${colors.bg} ${colors.text} border ${colors.border}`}>
                   {alert.messageType}
                 </Badge>
+                <span className={`text-sm font-medium ${colors.text}`}>
+                  {alertTypeName}
+                </span>
                 <span className="text-sm text-gray-500">
                   {formatDateTime(alert.messageIssueTime)}
                 </span>
@@ -274,11 +263,10 @@ function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
             </div>
 
             {/* Summary preview */}
-            {!expanded && cleanSummary && (
+            {!expanded && summary && (
               <div className="mt-3">
                 <p className="text-sm text-gray-300 line-clamp-2">
-                  {cleanSummary.substring(0, 200)}
-                  {cleanSummary.length > 200 && "..."}
+                  {summary}
                 </p>
                 <span className="text-xs text-gray-500 mt-1 inline-block">
                   Click to expand
@@ -292,30 +280,26 @@ function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
       {/* Expanded content */}
       {expanded && (
         <div className="px-4 pb-4 border-t border-white/10">
-          {/* Activity ID if present */}
-          {activityId && (
-            <div className="mt-4 p-3 rounded bg-black/20">
-              <p className="text-xs text-gray-500">Activity ID</p>
-              <p className="text-sm text-white font-mono">{activityId}</p>
+          {/* Summary highlight */}
+          {summary && (
+            <div className="mt-4 p-4 rounded-lg bg-black/20 border-l-4 border-blue-500">
+              <h5 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                Summary
+              </h5>
+              <p className="text-sm text-gray-200 leading-relaxed">
+                {summary}
+              </p>
             </div>
           )}
 
-          {/* Parsed sections */}
-          <div className="mt-4 space-y-4">
-            {sections.map((section, idx) => (
-              <div key={idx} className="p-4 rounded-lg bg-black/30">
-                {section.title && (
-                  <h5 className="text-sm font-semibold text-white mb-2 pb-2 border-b border-white/10">
-                    {section.title}
-                  </h5>
-                )}
-                {section.content && (
-                  <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
-                    {section.content}
-                  </p>
-                )}
-              </div>
-            ))}
+          {/* Full report */}
+          <div className="mt-4 p-4 rounded-lg bg-black/30">
+            <h5 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+              Full Report
+            </h5>
+            <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">
+              {formattedBody}
+            </div>
           </div>
 
           {/* External link */}
