@@ -1,0 +1,12 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: {{ include "astronomy.fullname" . }}-cert
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "astronomy.labels" . | nindent 4 }}
+spec:
+  domains:
+    - {{ .Values.ingress.host }}
+{{- end }}

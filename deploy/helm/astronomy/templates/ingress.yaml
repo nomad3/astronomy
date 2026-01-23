@@ -6,20 +6,13 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "astronomy.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    kubernetes.io/ingress.class: gce
+    networking.gke.io/managed-certificates: {{ include "astronomy.fullname" . }}-cert
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
-  {{- if .Values.ingress.className }}
-  ingressClassName: {{ .Values.ingress.className }}
-  {{- end }}
-  {{- if .Values.ingress.tls.enabled }}
-  tls:
-    - hosts:
-        - {{ .Values.ingress.host }}
-      secretName: {{ .Values.ingress.tls.secretName }}
-  {{- end }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:
