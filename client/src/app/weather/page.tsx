@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, type SpaceWeatherAlert } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
-import { CloudSun, Sun, Zap, Shield, Radio, Waves, ExternalLink } from "lucide-react";
+import { CloudSun, Sun, Zap, Shield, Radio, Waves, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 
 const getAlertIcon = (type: string) => {
   const t = type.toLowerCase();
@@ -175,45 +175,132 @@ export default function WeatherPage() {
               <CardTitle className="text-lg">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {alerts.map((alert) => {
-                const Icon = getAlertIcon(alert.messageType);
-                const colors = getAlertColor(alert.messageType);
-
-                return (
-                  <div key={alert.messageID} className={`p-4 rounded-lg ${colors.bg} border ${colors.border}`}>
-                    <div className="flex items-start gap-4">
-                      <div className={`p-2 rounded-lg bg-black/20`}>
-                        <Icon className={`h-5 w-5 ${colors.text}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <Badge className={`${colors.bg} ${colors.text} border ${colors.border}`}>
-                            {alert.messageType}
-                          </Badge>
-                          <span className="text-sm text-gray-500">
-                            {formatDateTime(alert.messageIssueTime)}
-                          </span>
-                        </div>
-                        <h4 className="text-white font-medium mt-2">{alert.messageType}</h4>
-                        {alert.messageURL && (
-                          <a
-                            href={alert.messageURL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 mt-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                            View Details
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {alerts.map((alert) => (
+                <AlertCard key={alert.messageID} alert={alert} />
+              ))}
             </CardContent>
           </Card>
         </>
+      )}
+    </div>
+  );
+}
+
+function AlertCard({ alert }: { alert: SpaceWeatherAlert }) {
+  const [expanded, setExpanded] = useState(false);
+  const Icon = getAlertIcon(alert.messageType);
+  const colors = getAlertColor(alert.messageType);
+
+  // Parse the message body to extract key information
+  const messageBody = alert.messageBody || "";
+  const lines = messageBody.split("\n").filter(line => line.trim());
+
+  // Get a summary (first few meaningful lines)
+  const summaryLines = lines.slice(0, 3);
+  const hasMore = lines.length > 3;
+
+  // Extract any key-value pairs from the message
+  const extractedData: { label: string; value: string }[] = [];
+  lines.forEach(line => {
+    // Look for patterns like "Label: Value" or "Label = Value"
+    const match = line.match(/^([A-Za-z\s]+)[:=]\s*(.+)$/);
+    if (match && match[1].length < 30) {
+      extractedData.push({ label: match[1].trim(), value: match[2].trim() });
+    }
+  });
+
+  return (
+    <div className={`rounded-lg ${colors.bg} border ${colors.border} overflow-hidden`}>
+      {/* Header - always visible */}
+      <div
+        className="p-4 cursor-pointer hover:bg-black/10 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-start gap-4">
+          <div className="p-2 rounded-lg bg-black/20 flex-shrink-0">
+            <Icon className={`h-5 w-5 ${colors.text}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge className={`${colors.bg} ${colors.text} border ${colors.border}`}>
+                  {alert.messageType}
+                </Badge>
+                <span className="text-sm text-gray-500">
+                  {formatDateTime(alert.messageIssueTime)}
+                </span>
+              </div>
+              <button className="p-1 hover:bg-white/10 rounded transition-colors">
+                {expanded ? (
+                  <ChevronUp className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+            </div>
+
+            {/* Summary preview */}
+            {!expanded && summaryLines.length > 0 && (
+              <div className="mt-3">
+                <p className="text-sm text-gray-300 line-clamp-2">
+                  {summaryLines.join(" ").substring(0, 200)}
+                  {summaryLines.join(" ").length > 200 && "..."}
+                </p>
+                {hasMore && (
+                  <span className="text-xs text-gray-500 mt-1 inline-block">
+                    Click to expand
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded content */}
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-white/10">
+          {/* Key data points if available */}
+          {extractedData.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 mb-4">
+              {extractedData.slice(0, 6).map((item, idx) => (
+                <div key={idx} className="p-2 rounded bg-black/20">
+                  <p className="text-xs text-gray-500">{item.label}</p>
+                  <p className="text-sm text-white font-mono truncate">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Full message body */}
+          <div className="mt-4 p-4 rounded-lg bg-black/30">
+            <h5 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+              Full Report
+            </h5>
+            <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
+              {messageBody || "No detailed information available."}
+            </pre>
+          </div>
+
+          {/* External link */}
+          {alert.messageURL && (
+            <div className="mt-4 flex items-center justify-between">
+              <a
+                href={alert.messageURL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                View on NASA DONKI
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <span className="text-xs text-gray-500">
+                ID: {alert.messageID}
+              </span>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
