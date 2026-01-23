@@ -17,3 +17,7 @@ app.include_router(api_router)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Space Exploration API"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
