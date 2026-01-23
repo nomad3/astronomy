@@ -63,6 +63,7 @@ export default function WeatherPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -81,6 +82,46 @@ export default function WeatherPage() {
         )}
       </div>
 
+      {/* Info Section - At the top */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-red-500/5 border-red-500/20">
+          <CardContent className="pt-6">
+            <Sun className="h-6 w-6 text-red-400 mb-2" />
+            <h4 className="font-medium text-white">Solar Flares</h4>
+            <p className="text-sm text-gray-400 mt-1">
+              Intense bursts of radiation from the Sun&apos;s surface
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-amber-500/5 border-amber-500/20">
+          <CardContent className="pt-6">
+            <Zap className="h-6 w-6 text-amber-400 mb-2" />
+            <h4 className="font-medium text-white">CMEs</h4>
+            <p className="text-sm text-gray-400 mt-1">
+              Coronal Mass Ejections - plasma clouds from the Sun
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-purple-500/5 border-purple-500/20">
+          <CardContent className="pt-6">
+            <Radio className="h-6 w-6 text-purple-400 mb-2" />
+            <h4 className="font-medium text-white">Radiation Belts</h4>
+            <p className="text-sm text-gray-400 mt-1">
+              Enhanced particle radiation in Earth&apos;s magnetosphere
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-blue-500/5 border-blue-500/20">
+          <CardContent className="pt-6">
+            <Waves className="h-6 w-6 text-blue-400 mb-2" />
+            <h4 className="font-medium text-white">Geomagnetic Storms</h4>
+            <p className="text-sm text-gray-400 mt-1">
+              Disturbances in Earth&apos;s magnetic field
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       {alerts.length === 0 ? (
         <Card className="border-emerald-500/30 bg-emerald-500/5">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
@@ -96,64 +137,70 @@ export default function WeatherPage() {
         </Card>
       ) : (
         <>
-          {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-sm text-gray-400">Total Alerts</p>
-                <p className="text-3xl font-bold text-white mt-1">{alerts.length}</p>
-              </CardContent>
-            </Card>
-            {alertTypes.slice(0, 3).map((type) => {
-              const count = alerts.filter(a => a.messageType === type).length;
-              const colors = getAlertColor(type);
-              const Icon = getAlertIcon(type);
-              return (
-                <Card key={type} className={colors.border}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Icon className={`h-4 w-4 ${colors.text}`} />
-                      {type}
+          {/* Summary Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-amber-400" />
+                Current Alerts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="p-4 rounded-lg bg-white/5">
+                  <p className="text-sm text-gray-400">Total Alerts</p>
+                  <p className="text-3xl font-bold text-white mt-1">{alerts.length}</p>
+                </div>
+                {alertTypes.slice(0, 3).map((type) => {
+                  const count = alerts.filter(a => a.messageType === type).length;
+                  const colors = getAlertColor(type);
+                  const Icon = getAlertIcon(type);
+                  return (
+                    <div key={type} className={`p-4 rounded-lg ${colors.bg}`}>
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Icon className={`h-4 w-4 ${colors.text}`} />
+                        {type}
+                      </div>
+                      <p className={`text-3xl font-bold mt-1 ${colors.text}`}>{count}</p>
                     </div>
-                    <p className={`text-3xl font-bold mt-1 ${colors.text}`}>{count}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Alert List */}
-          <div className="space-y-4">
-            {alerts.map((alert) => {
-              const Icon = getAlertIcon(alert.messageType);
-              const colors = getAlertColor(alert.messageType);
-              const summary = alert.messageBody.split('\n').find(line => line.includes('Summary'))?.replace('## Summary:', '').trim() || alert.messageType;
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {alerts.map((alert) => {
+                const Icon = getAlertIcon(alert.messageType);
+                const colors = getAlertColor(alert.messageType);
 
-              return (
-                <Card key={alert.messageID} className={`${colors.border} hover:bg-white/5 transition-colors`}>
-                  <CardContent className="p-6">
+                return (
+                  <div key={alert.messageID} className={`p-4 rounded-lg ${colors.bg} border ${colors.border}`}>
                     <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-xl ${colors.bg}`}>
-                        <Icon className={`h-6 w-6 ${colors.text}`} />
+                      <div className={`p-2 rounded-lg bg-black/20`}>
+                        <Icon className={`h-5 w-5 ${colors.text}`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
-                          <Badge className={`${colors.bg} ${colors.text} ${colors.border}`}>
+                          <Badge className={`${colors.bg} ${colors.text} border ${colors.border}`}>
                             {alert.messageType}
                           </Badge>
                           <span className="text-sm text-gray-500">
                             {formatDateTime(alert.messageIssueTime)}
                           </span>
                         </div>
-                        <p className="text-gray-300 mt-3 leading-relaxed">
-                          {summary}
-                        </p>
+                        <h4 className="text-white font-medium mt-2">{alert.messageType}</h4>
                         {alert.messageURL && (
                           <a
                             href={alert.messageURL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 mt-3 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                            className="inline-flex items-center gap-2 mt-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
                           >
                             View Details
                             <ExternalLink className="h-4 w-4" />
@@ -161,50 +208,13 @@ export default function WeatherPage() {
                         )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
         </>
       )}
-
-      {/* Info Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">About Space Weather</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="p-4 rounded-lg bg-red-500/10">
-            <Sun className="h-6 w-6 text-red-400 mb-2" />
-            <h4 className="font-medium text-white">Solar Flares</h4>
-            <p className="text-sm text-gray-400 mt-1">
-              Intense bursts of radiation from the Sun&apos;s surface
-            </p>
-          </div>
-          <div className="p-4 rounded-lg bg-amber-500/10">
-            <Zap className="h-6 w-6 text-amber-400 mb-2" />
-            <h4 className="font-medium text-white">CMEs</h4>
-            <p className="text-sm text-gray-400 mt-1">
-              Coronal Mass Ejections - plasma clouds from the Sun
-            </p>
-          </div>
-          <div className="p-4 rounded-lg bg-purple-500/10">
-            <Radio className="h-6 w-6 text-purple-400 mb-2" />
-            <h4 className="font-medium text-white">Radiation Belts</h4>
-            <p className="text-sm text-gray-400 mt-1">
-              Enhanced particle radiation in Earth&apos;s magnetosphere
-            </p>
-          </div>
-          <div className="p-4 rounded-lg bg-blue-500/10">
-            <Waves className="h-6 w-6 text-blue-400 mb-2" />
-            <h4 className="font-medium text-white">Geomagnetic Storms</h4>
-            <p className="text-sm text-gray-400 mt-1">
-              Disturbances in Earth&apos;s magnetic field
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -64,45 +64,46 @@ export function AsteroidAlerts({ className }: AsteroidAlertsProps) {
         ) : (
           <>
             {asteroids.slice(0, 4).map((asteroid) => (
-              <div
-                key={asteroid.id}
-                className={`p-3 rounded-lg transition-colors ${
-                  asteroid.is_potentially_hazardous
-                    ? "bg-red-500/10 border border-red-500/30"
-                    : "bg-white/5 hover:bg-white/10"
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0">
-                    <h4 className="font-medium text-white truncate text-sm">
-                      {asteroid.name}
-                    </h4>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDate(asteroid.close_approach_date)} • {formatDistance(parseFloat(asteroid.miss_distance_km))}
-                    </p>
+              <Link key={asteroid.id} href={`/asteroids/${asteroid.id}`}>
+                <div
+                  className={`p-3 rounded-lg transition-colors cursor-pointer ${
+                    asteroid.is_potentially_hazardous
+                      ? "bg-red-500/10 border border-red-500/30 hover:bg-red-500/20"
+                      : "bg-white/5 hover:bg-white/10"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0">
+                      <h4 className="font-medium text-white truncate text-sm">
+                        {asteroid.name}
+                      </h4>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {formatDate(asteroid.close_approach_date)} • {formatDistance(parseFloat(asteroid.miss_distance_km))}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={asteroid.is_potentially_hazardous ? "danger" : "success"}
+                      className="flex-shrink-0 ml-2"
+                    >
+                      {asteroid.is_potentially_hazardous ? "PHA" : "Safe"}
+                    </Badge>
                   </div>
-                  <Badge
-                    variant={asteroid.is_potentially_hazardous ? "danger" : "success"}
-                    className="flex-shrink-0 ml-2"
-                  >
-                    {asteroid.is_potentially_hazardous ? "PHA" : "Safe"}
-                  </Badge>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-500">Diameter:</span>
+                      <span className="text-gray-300 ml-1">
+                        {(asteroid.estimated_diameter_km * 1000).toFixed(0)}m
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Velocity:</span>
+                      <span className="text-gray-300 ml-1">
+                        {parseFloat(asteroid.relative_velocity_kms).toFixed(1)} km/s
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span className="text-gray-500">Diameter:</span>
-                    <span className="text-gray-300 ml-1">
-                      {(asteroid.estimated_diameter_km * 1000).toFixed(0)}m
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Velocity:</span>
-                    <span className="text-gray-300 ml-1">
-                      {parseFloat(asteroid.relative_velocity_kms).toFixed(1)} km/s
-                    </span>
-                  </div>
-                </div>
-              </div>
+              </Link>
             ))}
             <Link
               href="/asteroids"

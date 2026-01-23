@@ -80,7 +80,7 @@ async def fetch_launch_by_id(launch_id: str) -> Optional[Dict[str, Any]]:
             "name": rocket_config.get("name"),
             "full_name": rocket_config.get("full_name"),
             "variant": rocket_config.get("variant"),
-            "family": rocket_config.get("family", {}).get("name") if rocket_config.get("family") else None,
+            "family": rocket_config.get("family"),
             "description": rocket_config.get("description"),
             "image_url": rocket_config.get("image_url"),
             "length": rocket_config.get("length"),

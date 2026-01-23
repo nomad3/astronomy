@@ -63,6 +63,14 @@ async def get_analytics_overview():
                 mission_types[orbit] = mission_types.get(orbit, 0) + 1
 
         return {
+            # Flat fields for stats cards
+            "total_upcoming_launches": total_upcoming_launches,
+            "active_neos": total_asteroids,
+            "space_weather_alerts": total_alerts,
+            "threat_level": threat_level,
+            "missions_by_status": launch_statuses,
+
+            # Detailed nested data
             "launches": {
                 "total": total_upcoming_launches,
                 "by_status": launch_statuses,
@@ -85,8 +93,6 @@ async def get_analytics_overview():
                 "by_orbit": mission_types,
                 "total_orbits": len(mission_types),
             },
-            "threat_level": threat_level,
-            "timestamp": None,  # Will be set by client
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Error aggregating analytics: {str(exc)}") from exc
