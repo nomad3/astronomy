@@ -9,7 +9,11 @@ import { api, type Asteroid } from "@/lib/api";
 import { formatDistance, formatDate } from "@/lib/utils";
 import { Orbit, AlertTriangle, ArrowRight } from "lucide-react";
 
-export function AsteroidAlerts() {
+interface AsteroidAlertsProps {
+  className?: string;
+}
+
+export function AsteroidAlerts({ className }: AsteroidAlertsProps) {
   const [asteroids, setAsteroids] = useState<Asteroid[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,14 +28,14 @@ export function AsteroidAlerts() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className={`flex flex-col ${className || ""}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Orbit className="h-5 w-5" />
             Near-Earth Objects
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 flex-1">
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
@@ -41,7 +45,7 @@ export function AsteroidAlerts() {
   }
 
   return (
-    <Card>
+    <Card className={`flex flex-col ${className || ""}`}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Orbit className="h-5 w-5 text-amber-400" />
@@ -54,7 +58,7 @@ export function AsteroidAlerts() {
           </Badge>
         )}
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 flex-1">
         {asteroids.length === 0 ? (
           <p className="text-gray-400 text-center py-4">No nearby asteroids</p>
         ) : (

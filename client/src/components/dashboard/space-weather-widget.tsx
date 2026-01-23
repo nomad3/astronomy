@@ -21,7 +21,11 @@ const getAlertVariant = (type: string): "danger" | "warning" | "info" => {
   return "info";
 };
 
-export function SpaceWeatherWidget() {
+interface SpaceWeatherWidgetProps {
+  className?: string;
+}
+
+export function SpaceWeatherWidget({ className }: SpaceWeatherWidgetProps) {
   const [alerts, setAlerts] = useState<SpaceWeatherAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,14 +38,14 @@ export function SpaceWeatherWidget() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className={`flex flex-col ${className || ""}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CloudSun className="h-5 w-5" />
             Space Weather
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 flex-1">
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-14 w-full" />
           ))}
@@ -51,14 +55,14 @@ export function SpaceWeatherWidget() {
   }
 
   return (
-    <Card>
+    <Card className={`flex flex-col ${className || ""}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CloudSun className="h-5 w-5 text-purple-400" />
           Space Weather
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         {alerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="p-4 rounded-full bg-emerald-500/10 mb-3">

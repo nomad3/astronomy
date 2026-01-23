@@ -9,7 +9,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api, type APOD } from "@/lib/api";
 import { Sparkles, ExternalLink } from "lucide-react";
 
-export function APODPreview() {
+interface APODPreviewProps {
+  className?: string;
+}
+
+export function APODPreview({ className }: APODPreviewProps) {
   const [apod, setApod] = useState<APOD | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,9 +26,9 @@ export function APODPreview() {
 
   if (loading) {
     return (
-      <Card className="overflow-hidden">
+      <Card className={`overflow-hidden flex flex-col ${className || ""}`}>
         <Skeleton className="aspect-video w-full" />
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 flex-1">
           <Skeleton className="h-5 w-3/4 mb-2" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-2/3 mt-1" />
@@ -36,7 +40,7 @@ export function APODPreview() {
   if (!apod) return null;
 
   return (
-    <Card className="overflow-hidden group">
+    <Card className={`overflow-hidden group flex flex-col ${className || ""}`}>
       <div className="relative aspect-video w-full overflow-hidden">
         {apod.media_type === "image" ? (
           <Image
@@ -64,7 +68,7 @@ export function APODPreview() {
           </h3>
         </div>
       </div>
-      <CardContent className="pt-4">
+      <CardContent className="pt-4 flex-1">
         <p className="text-sm text-gray-400 line-clamp-2">{apod.explanation}</p>
         <div className="mt-3 flex items-center justify-between">
           <span className="text-xs text-gray-500">

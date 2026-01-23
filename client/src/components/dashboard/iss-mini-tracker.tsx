@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { api, type ISSPosition } from "@/lib/api";
 import { Satellite, MapPin, Gauge, Mountain, ExternalLink } from "lucide-react";
 
-export function ISSMiniTracker() {
+interface ISSMiniTrackerProps {
+  className?: string;
+}
+
+export function ISSMiniTracker({ className }: ISSMiniTrackerProps) {
   const [position, setPosition] = useState<ISSPosition | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +29,7 @@ export function ISSMiniTracker() {
   }, []);
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden flex flex-col ${className || ""}`}>
       <div className="relative h-32 bg-gradient-to-br from-blue-600/20 to-purple-600/20">
         <div className="absolute inset-0 flex items-center justify-center">
           <Satellite className="h-16 w-16 text-blue-400/30 animate-float" />

@@ -9,7 +9,11 @@ import { api, type Launch } from "@/lib/api";
 import { getTimeUntil, formatDateTime } from "@/lib/utils";
 import { Rocket, MapPin, Calendar } from "lucide-react";
 
-export function UpcomingLaunches() {
+interface UpcomingLaunchesProps {
+  className?: string;
+}
+
+export function UpcomingLaunches({ className }: UpcomingLaunchesProps) {
   const [launches, setLaunches] = useState<Launch[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +26,7 @@ export function UpcomingLaunches() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Rocket className="h-5 w-5" />
@@ -46,14 +50,14 @@ export function UpcomingLaunches() {
   }
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Rocket className="h-5 w-5 text-blue-400" />
           Upcoming Launches
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1">
         {launches.length === 0 ? (
           <p className="text-gray-400 text-center py-8">No upcoming launches</p>
         ) : (

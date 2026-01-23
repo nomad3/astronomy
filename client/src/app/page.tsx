@@ -11,34 +11,34 @@ export default function DashboardPage() {
       {/* Stats Overview */}
       <StatsCards />
 
-      {/* Main Grid */}
+      {/* Main Grid - 2 columns on large screens */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - Launches */}
-        <div className="lg:col-span-2">
-          <UpcomingLaunches />
+        <div className="lg:col-span-2 flex flex-col">
+          <UpcomingLaunches className="flex-1" />
         </div>
 
         {/* Right Column - ISS Tracker */}
-        <div>
-          <ISSMiniTracker />
+        <div className="flex flex-col">
+          <ISSMiniTracker className="flex-1" />
         </div>
       </div>
 
-      {/* Secondary Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Secondary Grid - 3 equal columns */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* APOD Preview */}
-        <div className="lg:col-span-1">
-          <APODPreview />
+        <div className="flex flex-col">
+          <APODPreview className="flex-1" />
         </div>
 
         {/* Asteroids */}
-        <div className="lg:col-span-1">
-          <AsteroidAlerts />
+        <div className="flex flex-col">
+          <AsteroidAlerts className="flex-1" />
         </div>
 
         {/* Space Weather */}
-        <div className="lg:col-span-1">
-          <SpaceWeatherWidget />
+        <div className="flex flex-col">
+          <SpaceWeatherWidget className="flex-1" />
         </div>
       </div>
     </div>

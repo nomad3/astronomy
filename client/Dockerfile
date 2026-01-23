@@ -3,14 +3,20 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Set production environment for build
+ENV NODE_ENV=production
+
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --include=dev
 
-# Copy source files
+# Copy source files (excluding .env.local via .dockerignore)
 COPY . .
+
+# Remove .env.local if it exists (use .env.production only)
+RUN rm -f .env.local
 
 # Build the application
 RUN npm run build
