@@ -7,18 +7,89 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, type SpaceWeatherAlert } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
-import { CloudSun, Sun, Zap, Shield, ArrowRight } from "lucide-react";
+import { CloudSun, Sun, Zap, Shield, ArrowRight, Radio, Waves, Activity } from "lucide-react";
 
-const getAlertIcon = (type: string) => {
-  if (type.toLowerCase().includes("flare")) return Sun;
-  if (type.toLowerCase().includes("cme")) return Zap;
-  return Shield;
+// Alert type descriptions and styling
+const alertTypeInfo: Record<string, {
+  icon: typeof Sun;
+  label: string;
+  description: string;
+  color: string;
+  bgColor: string;
+}> = {
+  CME: {
+    icon: Zap,
+    label: "Coronal Mass Ejection",
+    description: "Solar plasma cloud heading toward Earth",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/20",
+  },
+  FLR: {
+    icon: Sun,
+    label: "Solar Flare",
+    description: "Intense burst of radiation from the Sun",
+    color: "text-red-400",
+    bgColor: "bg-red-500/20",
+  },
+  SEP: {
+    icon: Activity,
+    label: "Solar Energetic Particles",
+    description: "High-energy particles from the Sun",
+    color: "text-orange-400",
+    bgColor: "bg-orange-500/20",
+  },
+  RBE: {
+    icon: Radio,
+    label: "Radiation Belt Enhancement",
+    description: "Elevated radiation in Earth's belts",
+    color: "text-purple-400",
+    bgColor: "bg-purple-500/20",
+  },
+  GST: {
+    icon: Waves,
+    label: "Geomagnetic Storm",
+    description: "Disturbance in Earth's magnetic field",
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/20",
+  },
+  Report: {
+    icon: CloudSun,
+    label: "Space Weather Report",
+    description: "General space weather update",
+    color: "text-gray-400",
+    bgColor: "bg-gray-500/20",
+  },
 };
 
-const getAlertVariant = (type: string): "danger" | "warning" | "info" => {
-  if (type.toLowerCase().includes("flare")) return "danger";
-  if (type.toLowerCase().includes("cme")) return "warning";
-  return "info";
+const getAlertInfo = (type: string) => {
+  return alertTypeInfo[type] || {
+    icon: Shield,
+    label: type,
+    description: "Space weather notification",
+    color: "text-gray-400",
+    bgColor: "bg-gray-500/20",
+  };
+};
+
+// Extract a meaningful summary from the message body
+const extractSummary = (body: string, type: string): string => {
+  if (!body) return getAlertInfo(type).description;
+
+  // Try to find Summary section
+  const summaryMatch = body.match(/##\s*Summary[:\s]*\n?([\s\S]*?)(?=##|$)/i);
+  if (summaryMatch && summaryMatch[1].trim()) {
+    const summary = summaryMatch[1].trim().split('\n')[0];
+    if (summary.length > 10) return summary.substring(0, 120) + (summary.length > 120 ? "..." : "");
+  }
+
+  // Try to find first meaningful sentence after headers
+  const lines = body.split('\n').filter(l => !l.startsWith('##') && l.trim().length > 20);
+  if (lines.length > 0) {
+    const firstLine = lines[0].trim();
+    return firstLine.substring(0, 120) + (firstLine.length > 120 ? "..." : "");
+  }
+
+  return getAlertInfo(type).description;
 };
 
 interface SpaceWeatherWidgetProps {
@@ -74,39 +145,35 @@ export function SpaceWeatherWidget({ className }: SpaceWeatherWidgetProps) {
         ) : (
           <div className="space-y-3">
             {alerts.slice(0, 4).map((alert) => {
-              const Icon = getAlertIcon(alert.messageType);
-              const variant = getAlertVariant(alert.messageType);
+              const info = getAlertInfo(alert.messageType);
+              const Icon = info.icon;
+              const summary = extractSummary(alert.messageBody, alert.messageType);
 
               return (
-                <div
+                <Link
                   key={alert.messageID}
-                  className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  href="/weather"
+                  className="block p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      variant === "danger" ? "bg-red-500/20" :
-                      variant === "warning" ? "bg-amber-500/20" : "bg-blue-500/20"
-                    }`}>
-                      <Icon className={`h-4 w-4 ${
-                        variant === "danger" ? "text-red-400" :
-                        variant === "warning" ? "text-amber-400" : "text-blue-400"
-                      }`} />
+                    <div className={`p-2 rounded-lg ${info.bgColor} flex-shrink-0`}>
+                      <Icon className={`h-4 w-4 ${info.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={variant} className="text-xs">
-                          {alert.messageType}
-                        </Badge>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-sm font-medium ${info.color}`}>
+                          {info.label}
+                        </span>
                       </div>
-                      <p className="text-sm text-gray-300 mt-1 line-clamp-2">
-                        {alert.messageBody.split('\n').find(line => line.includes('Summary'))?.replace('## Summary:', '').trim() || alert.messageType}
+                      <p className="text-xs text-gray-400 line-clamp-2">
+                        {summary}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {formatDateTime(alert.messageIssueTime)}
                       </p>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
             <Link

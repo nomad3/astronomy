@@ -31,7 +31,7 @@ client:
   replicaCount: 1
   image:
     repository: astronomy-client
-    tag: "20260123152000"
+    tag: "20260123153000"
   port: 3000
   resources:
     requests:
