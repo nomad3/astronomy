@@ -6,11 +6,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, type APOD } from "@/lib/api";
-import { Sparkles, ExternalLink, Camera } from "lucide-react";
+import { Sparkles, ExternalLink, Camera, ImageOff } from "lucide-react";
 
 export function APODHero() {
   const [apod, setApod] = useState<APOD | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     api.getAPOD()
@@ -32,13 +33,22 @@ export function APODHero() {
   return (
     <div className="relative w-full h-[300px] md:h-[400px] rounded-xl overflow-hidden group">
       {/* Background Image */}
-      {apod.media_type === "image" ? (
+      {imageError ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800/80">
+          <ImageOff className="h-12 w-12 text-gray-500 mb-2" />
+          <span className="text-gray-400 text-sm">Image unavailable</span>
+        </div>
+      ) : apod.media_type === "image" ? (
         <Image
           src={apod.hdurl || apod.url}
           alt={apod.title}
           fill
           priority
           className="object-cover transition-transform duration-700 group-hover:scale-105"
+          onError={() => {
+            console.warn(`[APOD Hero] Failed to load image: ${apod.hdurl || apod.url}`);
+            setImageError(true);
+          }}
         />
       ) : (
         <iframe

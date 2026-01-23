@@ -8,10 +8,38 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, type Launch } from "@/lib/api";
 import { getTimeUntil, formatDateTime } from "@/lib/utils";
-import { Rocket, MapPin, Calendar } from "lucide-react";
+import { Rocket, MapPin, Calendar, ImageOff } from "lucide-react";
 
 interface UpcomingLaunchesProps {
   className?: string;
+}
+
+function LaunchImage({ src, alt }: { src: string; alt: string }) {
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div className="h-20 w-32 flex-shrink-0 rounded-lg bg-gray-800 flex items-center justify-center">
+        <ImageOff className="h-6 w-6 text-gray-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className="object-cover"
+        unoptimized
+        onError={() => {
+          console.warn(`[LaunchImage] Failed to load: ${src}`);
+          setError(true);
+        }}
+      />
+    </div>
+  );
 }
 
 export function UpcomingLaunches({ className }: UpcomingLaunchesProps) {
@@ -65,17 +93,7 @@ export function UpcomingLaunches({ className }: UpcomingLaunchesProps) {
           launches.map((launch) => (
             <Link key={launch.id} href={`/launches/${launch.id}`}>
               <div className="flex gap-4 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                {launch.image && (
-                  <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
-                    <Image
-                      src={launch.image}
-                      alt={launch.name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                )}
+                {launch.image && <LaunchImage src={launch.image} alt={launch.name} />}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="font-medium text-white truncate">
