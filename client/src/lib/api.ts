@@ -32,6 +32,121 @@ export interface Launch {
   vid_url: string | null;
 }
 
+export interface LaunchStatus {
+  id: number;
+  name: string;
+  abbrev: string;
+  description: string;
+}
+
+export interface RocketDetails {
+  id: number;
+  name: string;
+  full_name: string;
+  variant: string;
+  family: string | null;
+  description: string;
+  image_url: string | null;
+  length: number | null;
+  diameter: number | null;
+  leo_capacity: number | null;
+  gto_capacity: number | null;
+  launch_mass: number | null;
+  to_thrust: number | null;
+  maiden_flight: string | null;
+  successful_launches: number;
+  failed_launches: number;
+  pending_launches: number;
+  wiki_url: string | null;
+}
+
+export interface ProviderDetails {
+  id: number;
+  name: string;
+  abbrev: string;
+  type: string;
+  country_code: string;
+  description: string;
+  founding_year: string | null;
+  logo_url: string | null;
+  image_url: string | null;
+  wiki_url: string | null;
+  successful_launches: number;
+  failed_launches: number;
+  pending_launches: number;
+}
+
+export interface MissionDetails {
+  id: number;
+  name: string;
+  type: string;
+  description: string;
+  orbit: {
+    id: number;
+    name: string;
+    abbrev: string;
+  } | null;
+}
+
+export interface PadDetails {
+  id: number;
+  name: string;
+  wiki_url: string | null;
+  map_url: string | null;
+  latitude: string;
+  longitude: string;
+  total_launch_count: number;
+  orbital_launch_attempt_count: number;
+  location: {
+    id: number;
+    name: string;
+    country_code: string;
+    map_image: string | null;
+    total_launch_count: number;
+  } | null;
+}
+
+export interface ProgramDetails {
+  id: number;
+  name: string;
+  description: string;
+  image_url: string | null;
+  wiki_url: string | null;
+}
+
+export interface LaunchUpdate {
+  id: number;
+  created_on: string;
+  comment: string;
+  info_url: string | null;
+}
+
+export interface LaunchDetail {
+  id: string;
+  name: string;
+  slug: string;
+  status: LaunchStatus;
+  window_start: string;
+  window_end: string;
+  net: string;
+  probability: number | null;
+  hold_reason: string | null;
+  fail_reason: string | null;
+  hashtag: string | null;
+  image: string | null;
+  infographic: string | null;
+  webcast_live: boolean;
+  info_urls: Array<{ priority: number; title: string; description: string; feature_image: string | null; url: string }>;
+  vid_urls: Array<{ priority: number; title: string; description: string; feature_image: string | null; url: string }>;
+  rocket: RocketDetails;
+  provider: ProviderDetails;
+  mission: MissionDetails;
+  pad: PadDetails;
+  programs: ProgramDetails[];
+  updates: LaunchUpdate[];
+  last_updated: string;
+}
+
 export interface Asteroid {
   id: string;
   name: string;
@@ -118,6 +233,9 @@ export interface AnalyticsOverview {
 export const api = {
   getLaunches: (limit = 10) =>
     fetcher<{ launches: Launch[] }>(`/launches?limit=${limit}`).then(r => r.launches),
+
+  getLaunch: (id: string) =>
+    fetcher<LaunchDetail>(`/launches/${id}`),
 
   getAsteroids: (limit = 10) =>
     fetcher<{ asteroids: Asteroid[] }>(`/asteroids?limit=${limit}`).then(r => r.asteroids),

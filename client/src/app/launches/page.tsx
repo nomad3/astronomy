@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,14 +14,12 @@ import {
   Calendar,
   Clock,
   Building2,
-  ChevronDown,
-  ChevronUp,
+  ArrowRight,
 } from "lucide-react";
 
 export default function LaunchesPage() {
   const [launches, setLaunches] = useState<Launch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     api.getLaunches(20)
@@ -67,14 +66,9 @@ export default function LaunchesPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {launches.map((launch) => {
-          const isExpanded = expanded === launch.id;
-
-          return (
-            <Card
-              key={launch.id}
-              className="overflow-hidden hover:border-white/20 transition-all"
-            >
+        {launches.map((launch) => (
+          <Link key={launch.id} href={`/launches/${launch.id}`}>
+            <Card className="overflow-hidden hover:border-white/20 hover:bg-white/5 transition-all cursor-pointer h-full">
               <CardContent className="p-0">
                 {launch.image && (
                   <div className="relative h-48 w-full overflow-hidden">
@@ -82,7 +76,7 @@ export default function LaunchesPage() {
                       src={launch.image}
                       alt={launch.name}
                       fill
-                      className="object-cover"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                       unoptimized
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -118,61 +112,33 @@ export default function LaunchesPage() {
                       <Clock className="h-4 w-4" />
                       <span>{getTimeUntil(launch.window_start)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400 col-span-2">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{launch.location}</span>
-                    </div>
                   </div>
 
-                  {/* Expandable Details */}
-                  {isExpanded && (
-                    <div className="pt-3 border-t border-white/10 space-y-3">
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <p className="text-gray-500 text-xs">Provider</p>
-                          <div className="flex items-center gap-2 text-white mt-1">
-                            <Building2 className="h-4 w-4 text-blue-400" />
-                            {launch.provider}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 text-xs">Orbit</p>
-                          <div className="flex items-center gap-2 text-white mt-1">
-                            <Rocket className="h-4 w-4 text-purple-400" />
-                            {launch.orbit || "N/A"}
-                          </div>
-                        </div>
+                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{launch.location}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <Building2 className="h-4 w-4 text-blue-400" />
+                        <span className="truncate max-w-[120px]">{launch.provider}</span>
                       </div>
-                      {launch.mission_description && (
-                        <div>
-                          <p className="text-gray-500 text-xs mb-1">Mission</p>
-                          <p className="text-sm text-gray-300">
-                            {launch.mission_description}
-                          </p>
+                      {launch.orbit && (
+                        <div className="flex items-center gap-2 text-gray-400">
+                          <Rocket className="h-4 w-4 text-purple-400" />
+                          <span>{launch.orbit}</span>
                         </div>
                       )}
                     </div>
-                  )}
-
-                  <button
-                    onClick={() => setExpanded(isExpanded ? null : launch.id)}
-                    className="w-full flex items-center justify-center gap-2 pt-2 text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    {isExpanded ? (
-                      <>
-                        Show Less <ChevronUp className="h-4 w-4" />
-                      </>
-                    ) : (
-                      <>
-                        Show More <ChevronDown className="h-4 w-4" />
-                      </>
-                    )}
-                  </button>
+                    <ArrowRight className="h-5 w-5 text-gray-500" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
+          </Link>
+        ))}
       </div>
     </div>
   );
