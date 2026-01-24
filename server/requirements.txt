@@ -6,3 +6,6 @@ redis
 httpx
 SQLAlchemy
 pydantic-settings
+astroquery>=0.4.6
+astropy>=6.0
+feedparser>=6.0

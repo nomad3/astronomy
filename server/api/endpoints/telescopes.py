@@ -1,14 +1,101 @@
-"""Endpoints for space telescope and probe imagery."""
+"""Endpoints for space telescope imagery and observatory data."""
 
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 import httpx
 from core.cache import get_cached, set_cache
-from core.config import settings
+from services.mast_service import (
+    fetch_jwst_status,
+    fetch_recent_observations_simple,
+    fetch_observation_detail,
+    fetch_discoveries,
+)
 
 router = APIRouter()
 
 NASA_IMAGE_LIBRARY_URL = "https://images-api.nasa.gov/search"
 
+
+# =============================================================================
+# JWST Live Status
+# =============================================================================
+
+@router.get("/telescopes/jwst/status")
+async def get_jwst_status():
+    """Get live JWST position, current target, and instrument status."""
+    try:
+        status = await fetch_jwst_status()
+        return status
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+# =============================================================================
+# Observations
+# =============================================================================
+
+@router.get("/telescopes/{telescope}/observations")
+async def get_telescope_observations(
+    telescope: str,
+    category: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0,
+):
+    """Get recent observations for JWST or Hubble."""
+    if telescope not in ("jwst", "hubble"):
+        raise HTTPException(status_code=400, detail="Telescope must be 'jwst' or 'hubble'")
+
+    try:
+        observations = await fetch_recent_observations_simple(telescope, limit)
+
+        # Filter by category if specified
+        if category:
+            observations = [o for o in observations if o.get("category") == category]
+
+        # Apply pagination
+        paginated = observations[offset:offset + limit]
+
+        return {
+            "observations": paginated,
+            "total": len(observations),
+            "telescope": telescope,
+            "category": category,
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get("/telescopes/observations/{obs_id}")
+async def get_observation_detail(obs_id: str):
+    """Get detailed information about a specific observation."""
+    try:
+        detail = await fetch_observation_detail(obs_id)
+        if not detail:
+            raise HTTPException(status_code=404, detail="Observation not found")
+        return detail
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+# =============================================================================
+# Discoveries / News
+# =============================================================================
+
+@router.get("/telescopes/discoveries")
+async def get_discoveries(limit: int = 10):
+    """Get latest telescope discoveries and news from NASA/STScI."""
+    try:
+        discoveries = await fetch_discoveries(limit)
+        return {"discoveries": discoveries}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+# =============================================================================
+# Image Galleries (Enhanced existing endpoints)
+# =============================================================================
 
 @router.get("/telescopes/jwst")
 async def get_jwst_images(limit: int = 12):
@@ -151,4 +238,3 @@ async def get_probe_images(probe: str = "voyager", limit: int = 12):
 
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-

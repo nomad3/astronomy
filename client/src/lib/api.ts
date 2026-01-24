@@ -287,6 +287,65 @@ export interface TelescopeImage {
   keywords: string[];
 }
 
+export interface TelescopeStatus {
+  telescope: "jwst" | "hubble";
+  position?: {
+    ra: number;
+    dec: number;
+    distance_km: number;
+    velocity_kms: number;
+  };
+  current_target?: string;
+  instrument?: string;
+  last_updated: string;
+  error?: string;
+}
+
+export interface Observation {
+  obs_id: string;
+  telescope: "jwst" | "hubble";
+  target_name: string;
+  instrument: string;
+  filters: string[];
+  date_observed: string;
+  category: string;
+  thumbnail_url?: string;
+  description?: string;
+  program_id?: string;
+  pi_name?: string;
+}
+
+export interface ObservationDetail extends Observation {
+  ra?: number;
+  dec?: number;
+  exposure_time?: number;
+  program_title?: string;
+  program_description?: string;
+  keywords?: string[];
+  data_products?: DataProduct[];
+  related_observations?: Observation[];
+  image_url?: string;
+  hd_url?: string;
+}
+
+export interface DataProduct {
+  product_id: string;
+  type: string;
+  size: string;
+  url: string;
+}
+
+export interface Discovery {
+  id: string;
+  title: string;
+  summary: string;
+  date: string;
+  url: string;
+  image_url?: string;
+  telescope?: "jwst" | "hubble";
+  related_observations?: string[];
+}
+
 export interface AnalyticsOverview {
   total_upcoming_launches: number;
   active_neos: number;
@@ -335,4 +394,25 @@ export const api = {
 
   getAnalytics: () =>
     fetcher<AnalyticsOverview>(`/analytics/overview`),
+
+  // Telescope Observatory Hub
+  getJWSTStatus: () =>
+    fetcher<TelescopeStatus>(`/telescopes/jwst/status`),
+
+  getObservations: (telescope: "jwst" | "hubble", params?: { category?: string; limit?: number; offset?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.category) searchParams.set("category", params.category);
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    if (params?.offset) searchParams.set("offset", String(params.offset));
+    const query = searchParams.toString();
+    return fetcher<{ observations: Observation[]; total: number }>(
+      `/telescopes/${telescope}/observations${query ? `?${query}` : ""}`
+    );
+  },
+
+  getObservationDetail: (obsId: string) =>
+    fetcher<ObservationDetail>(`/telescopes/observations/${obsId}`),
+
+  getDiscoveries: (limit = 10) =>
+    fetcher<{ discoveries: Discovery[] }>(`/telescopes/discoveries?limit=${limit}`).then(r => r.discoveries),
 };
