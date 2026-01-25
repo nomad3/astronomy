@@ -354,6 +354,68 @@ export interface AnalyticsOverview {
   missions_by_status: Record<string, number>;
 }
 
+// Intelligence System Types
+export interface SpaceNews {
+  id: string;
+  source: string;
+  external_id: string;
+  title: string;
+  summary: string;
+  content: string;
+  url: string;
+  image_url: string | null;
+  category: string;
+  published_at: string;
+  created_at: string;
+}
+
+export interface Insight {
+  id: string;
+  type: "connection" | "trend" | "gap" | "anomaly";
+  title: string;
+  description: string;
+  confidence_score: number;
+  related_news_ids: string[];
+  category: string;
+  evidence: string;
+  generated_at: string;
+  related_news?: SpaceNews[];
+}
+
+export interface Alert {
+  id: string;
+  insight_id: string;
+  priority: "low" | "medium" | "high";
+  seen: boolean;
+  created_at: string;
+  insight?: Insight;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatResponse {
+  response: string;
+  sources: Array<{
+    id: string;
+    title: string;
+    source: string;
+    url: string;
+  }>;
+  conversation_id: string | null;
+}
+
+export interface IntelligenceStats {
+  total_news: number;
+  total_insights: number;
+  unread_alerts: number;
+  insight_types: Record<string, number>;
+  categories: Record<string, number>;
+  recent_high_confidence: Insight[];
+}
+
 // API Functions
 export const api = {
   getLaunches: (limit = 10) =>
@@ -415,4 +477,60 @@ export const api = {
 
   getDiscoveries: (limit = 10) =>
     fetcher<{ discoveries: Discovery[] }>(`/telescopes/discoveries?limit=${limit}`).then(r => r.discoveries),
+
+  // Intelligence System
+  getIntelligenceStats: () =>
+    fetcher<IntelligenceStats>(`/intelligence/stats`),
+
+  getCollectedNews: (limit = 50) =>
+    fetcher<{ news: SpaceNews[]; count: number }>(`/intelligence/news?limit=${limit}`),
+
+  triggerNewsCollection: () =>
+    fetch(`${API_BASE}/intelligence/collect`, { method: "POST" }).then(r => r.json()),
+
+  getInsights: (params?: { type?: string; category?: string; limit?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.type) searchParams.set("type", params.type);
+    if (params?.category) searchParams.set("category", params.category);
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    const query = searchParams.toString();
+    return fetcher<{ insights: Insight[]; count: number }>(
+      `/intelligence/insights${query ? `?${query}` : ""}`
+    );
+  },
+
+  getInsightDetail: (id: string) =>
+    fetcher<Insight>(`/intelligence/insights/${id}`),
+
+  triggerPatternAnalysis: (days = 7) =>
+    fetch(`${API_BASE}/intelligence/analyze?days=${days}`, { method: "POST" }).then(r => r.json()),
+
+  getAlerts: (unreadOnly = true, limit = 20) =>
+    fetcher<{ alerts: Alert[]; count: number }>(
+      `/intelligence/alerts?unread_only=${unreadOnly}&limit=${limit}`
+    ),
+
+  markAlertSeen: (alertId: string) =>
+    fetch(`${API_BASE}/intelligence/alerts/${alertId}/seen`, { method: "PUT" }).then(r => r.json()),
+
+  sendChatMessage: async (query: string, conversationHistory?: ChatMessage[]) => {
+    const res = await fetch(`${API_BASE}/intelligence/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        conversation_history: conversationHistory,
+      }),
+    });
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json() as Promise<ChatResponse>;
+  },
+
+  getChatHistory: (limit = 20) =>
+    fetcher<{ conversations: Array<{ id: string; user_query: string; assistant_response: string; created_at: string }>; count: number }>(
+      `/intelligence/chat/history?limit=${limit}`
+    ),
+
+  getChatSuggestions: () =>
+    fetcher<{ suggestions: string[] }>(`/intelligence/chat/suggestions`).then(r => r.suggestions),
 };

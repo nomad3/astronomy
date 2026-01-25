@@ -13,12 +13,14 @@ import {
   Image,
   Telescope,
   Satellite,
+  Brain,
   Menu,
   X,
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "AI Intelligence", href: "/intelligence", icon: Brain },
   { name: "Launches", href: "/launches", icon: Rocket },
   { name: "ISS Tracker", href: "/iss", icon: Satellite },
   { name: "Asteroids", href: "/asteroids", icon: Orbit },
