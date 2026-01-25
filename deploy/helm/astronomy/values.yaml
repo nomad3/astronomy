@@ -24,6 +24,7 @@ server:
       cpu: "500m"
   env:
     NASA_API_KEY: ""  # Set via --set or secrets
+    ANTHROPIC_API_KEY: ""  # Set via --set or secrets (for AI Intelligence features)
 
 # Client (Next.js frontend)
 client:

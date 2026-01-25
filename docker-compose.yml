@@ -8,10 +8,12 @@ services:
       - "8000:8000"
     volumes:
       - ./server:/app
+      - chromadb_data:/app/chromadb_data
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/astronomy
       - REDIS_URL=redis://redis:6379
       - NASA_API_KEY=${NASA_API_KEY:-DEMO_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     depends_on:
       - db
       - redis
@@ -64,3 +66,4 @@ services:
 
 volumes:
   postgres_data:
+  chromadb_data:
