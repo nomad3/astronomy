@@ -11,4 +11,7 @@ astropy>=6.0
 feedparser>=6.0
 anthropic>=0.40.0
 chromadb>=0.4.0
+# CPU-only torch for K8s (no CUDA needed)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
 sentence-transformers>=2.2.0
