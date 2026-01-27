@@ -22,7 +22,7 @@ export function APODHero() {
 
   if (loading) {
     return (
-      <div className="relative w-full h-[300px] md:h-[400px] rounded-xl overflow-hidden">
+      <div className="relative w-full h-[50vh] md:h-[75vh] rounded-xl overflow-hidden">
         <Skeleton className="absolute inset-0" />
       </div>
     );
@@ -31,7 +31,7 @@ export function APODHero() {
   if (!apod) return null;
 
   return (
-    <div className="relative w-full h-[300px] md:h-[400px] rounded-xl overflow-hidden group">
+    <div className="relative w-full h-[50vh] md:h-[75vh] rounded-xl overflow-hidden group">
       {/* Background Image */}
       {imageError ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-800/80">
