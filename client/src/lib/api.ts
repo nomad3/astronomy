@@ -15,6 +15,7 @@ async function fetcher<T>(endpoint: string): Promise<T> {
 // Types
 export interface Launch {
   id: string;
+  slug: string;
   name: string;
   status: string;
   window_start: string;
@@ -121,6 +122,56 @@ export interface LaunchUpdate {
   info_url: string | null;
 }
 
+export interface CrewMember {
+  name: string;
+  role: string;
+  agency: string;
+  nationality: string;
+  previous_missions: string[];
+  bio: string;
+}
+
+export interface MissionObjectives {
+  primary_goal: string;
+  experiments: string[];
+  milestones: string[];
+  duration: string;
+  trajectory: string;
+}
+
+export interface HistoricalContext {
+  significance: string;
+  program_history: string;
+  milestones: string[];
+  future_implications: string;
+}
+
+export interface TechnicalDetails {
+  vehicle: {
+    name: string;
+    height: string;
+    thrust: string;
+    stages: string;
+  };
+  spacecraft: {
+    name: string;
+    capacity: string;
+  };
+  mission_parameters: {
+    destination: string;
+    distance: string;
+    duration: string;
+    orbit_type: string;
+  };
+}
+
+export interface LaunchEnrichment {
+  crew_profiles?: { crew: CrewMember[] };
+  mission_objectives?: MissionObjectives;
+  historical_context?: HistoricalContext;
+  technical_details?: TechnicalDetails;
+}
+
 export interface LaunchDetail {
   id: string;
   name: string;
@@ -145,6 +196,7 @@ export interface LaunchDetail {
   programs: ProgramDetails[];
   updates: LaunchUpdate[];
   last_updated: string;
+  enrichment?: LaunchEnrichment;
 }
 
 export interface Asteroid {
@@ -423,6 +475,9 @@ export const api = {
 
   getLaunch: (id: string) =>
     fetcher<LaunchDetail>(`/launches/${id}`),
+
+  triggerLaunchEnrichment: (launchId: string) =>
+    fetch(`${API_BASE}/launches/${launchId}/enrich`, { method: "POST" }).then(r => r.json()),
 
   getAsteroids: (limit = 10) =>
     fetcher<{ asteroids: Asteroid[] }>(`/asteroids?limit=${limit}`).then(r => r.asteroids),

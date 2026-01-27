@@ -1,7 +1,7 @@
 from db.session import engine
 from db.base import Base
 from models.celestial_object import CelestialObject
-from db.models import SpaceNews, Insight, ChatConversation, Alert
+from db.models import SpaceNews, Insight, ChatConversation, Alert, EnrichedContent
 
 def init_db():
     # Create all tables

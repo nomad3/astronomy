@@ -1,9 +1,9 @@
 """Database models for the AI intelligence system."""
 
 import uuid
-from datetime import datetime
-from sqlalchemy import Column, String, Text, Float, Boolean, DateTime, ARRAY
-from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime, timedelta
+from sqlalchemy import Column, String, Text, Float, Boolean, DateTime, ARRAY, Index
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from db.base import Base
 
@@ -106,4 +106,42 @@ class Alert(Base):
             "priority": self.priority,
             "seen": self.seen,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class EnrichedContent(Base):
+    """AI-enriched content for launches, asteroids, and other astronomical events."""
+    __tablename__ = "enriched_content"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_type = Column(String(50), nullable=False)  # launch, asteroid, telescope
+    entity_id = Column(String(255), nullable=False)  # External ID (launch UUID, asteroid designation)
+    content_type = Column(String(100), nullable=False)  # crew_profile, mission_objectives, etc.
+    content = Column(JSONB, nullable=False)  # Structured content block
+    sources = Column(JSONB)  # List of source URLs used
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)  # For cache invalidation
+
+    __table_args__ = (
+        Index('idx_enriched_entity', 'entity_type', 'entity_id'),
+        Index('idx_enriched_expires', 'expires_at'),
+    )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.expires_at is None and self.created_at:
+            self.expires_at = self.created_at + timedelta(days=7)
+        elif self.expires_at is None:
+            self.expires_at = datetime.utcnow() + timedelta(days=7)
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "entity_type": self.entity_type,
+            "entity_id": self.entity_id,
+            "content_type": self.content_type,
+            "content": self.content,
+            "sources": self.sources,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
         }

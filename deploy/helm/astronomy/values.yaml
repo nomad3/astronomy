@@ -13,15 +13,15 @@ server:
   replicaCount: 1
   image:
     repository: astronomy-server
-    tag: "20260126095913"
+    tag: "20260126212600"
   port: 8000
   resources:
     requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
       memory: "512Mi"
-      cpu: "500m"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
   env:
     NASA_API_KEY: ""  # Set via --set or secrets
     ANTHROPIC_API_KEY: ""  # Set via --set or secrets (for AI Intelligence features)
@@ -32,7 +32,7 @@ client:
   replicaCount: 1
   image:
     repository: astronomy-client
-    tag: "20260126095913"
+    tag: "20260126200758"
   port: 3000
   resources:
     requests:

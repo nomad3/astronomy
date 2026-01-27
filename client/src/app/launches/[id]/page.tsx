@@ -29,6 +29,15 @@ import {
   Info,
   Map,
   RefreshCw,
+  X,
+  ZoomIn,
+  Users,
+  BookOpen,
+  History,
+  Wrench,
+  User,
+  CheckCircle2,
+  Route,
 } from "lucide-react";
 
 export default function LaunchDetailPage() {
@@ -37,20 +46,22 @@ export default function LaunchDetailPage() {
   const [launch, setLaunch] = useState<LaunchDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFullImage, setShowFullImage] = useState(false);
 
-  const launchId = params.id as string;
+  // The param can be either a UUID or a slug - backend handles both
+  const launchIdentifier = params.id as string;
 
   useEffect(() => {
-    if (!launchId) return;
+    if (!launchIdentifier) return;
 
-    api.getLaunch(launchId)
+    api.getLaunch(launchIdentifier)
       .then(setLaunch)
       .catch((err) => {
         console.error(err);
         setError("Failed to load launch details");
       })
       .finally(() => setLoading(false));
-  }, [launchId]);
+  }, [launchIdentifier]);
 
   if (loading) {
     return (
@@ -97,19 +108,53 @@ export default function LaunchDetailPage() {
         Back to Launches
       </Link>
 
-      {/* Hero Section */}
-      <div className="relative rounded-xl overflow-hidden">
-        {launch.image ? (
-          <div className="relative h-72 md:h-96 w-full">
+      {/* Full Screen Image Modal */}
+      {showFullImage && launch.image && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center cursor-zoom-out"
+          onClick={() => setShowFullImage(false)}
+        >
+          <button
+            onClick={() => setShowFullImage(false)}
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X className="h-6 w-6 text-white" />
+          </button>
+          <div className="relative w-full h-full max-w-6xl max-h-[90vh] m-4">
             <Image
               src={launch.image}
               alt={launch.name}
               fill
-              className="object-cover"
+              className="object-contain"
               unoptimized
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+          </div>
+          <p className="absolute bottom-4 text-gray-400 text-sm">Click anywhere to close</p>
+        </div>
+      )}
+
+      {/* Hero Section */}
+      <div className="relative rounded-xl overflow-hidden">
+        {launch.image ? (
+          <div
+            className="relative h-72 md:h-96 w-full cursor-zoom-in group"
+            onClick={() => setShowFullImage(true)}
+          >
+            <Image
+              src={launch.image}
+              alt={launch.name}
+              fill
+              className="object-contain bg-black/50"
+              unoptimized
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+            {/* Zoom hint */}
+            <div className="absolute top-4 right-4 p-2 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-white/80 text-sm">
+              <ZoomIn className="h-4 w-4" />
+              Click to enlarge
+            </div>
           </div>
         ) : (
           <div className="h-72 md:h-96 w-full bg-gradient-to-br from-blue-900/30 to-purple-900/30 flex items-center justify-center">
@@ -214,6 +259,264 @@ export default function LaunchDetailPage() {
                     {launch.mission.orbit.abbrev && (
                       <Badge variant="info" className="text-xs">{launch.mission.orbit.abbrev}</Badge>
                     )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Crew Profiles - Enriched Content */}
+          {launch.enrichment?.crew_profiles?.crew && launch.enrichment.crew_profiles.crew.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-400" />
+                  Crew
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {launch.enrichment.crew_profiles.crew.map((member, idx) => (
+                    <div
+                      key={idx}
+                      className="flex gap-3 p-3 rounded-lg bg-white/5 border border-white/10"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <User className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-white">{member.name}</h4>
+                        <p className="text-sm text-blue-400">{member.role}</p>
+                        {member.agency && (
+                          <p className="text-xs text-gray-500">{member.agency} • {member.nationality}</p>
+                        )}
+                        {member.bio && (
+                          <p className="text-xs text-gray-400 mt-2 line-clamp-2">{member.bio}</p>
+                        )}
+                        {member.previous_missions && member.previous_missions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {member.previous_missions.slice(0, 2).map((mission, i) => (
+                              <Badge key={i} variant="default" className="text-[10px]">
+                                {mission}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Mission Objectives - Enriched Content */}
+          {launch.enrichment?.mission_objectives && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-emerald-400" />
+                  Mission Objectives
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {launch.enrichment.mission_objectives.primary_goal && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Primary Goal</h4>
+                    <p className="text-gray-300">{launch.enrichment.mission_objectives.primary_goal}</p>
+                  </div>
+                )}
+
+                {launch.enrichment.mission_objectives.experiments && launch.enrichment.mission_objectives.experiments.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Experiments & Payloads</h4>
+                    <ul className="space-y-2">
+                      {launch.enrichment.mission_objectives.experiments.map((exp, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-gray-300 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                          {exp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {launch.enrichment.mission_objectives.milestones && launch.enrichment.mission_objectives.milestones.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Key Milestones</h4>
+                    <ul className="space-y-2">
+                      {launch.enrichment.mission_objectives.milestones.map((milestone, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-gray-300 text-sm">
+                          <Target className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                          {milestone}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-3 border-t border-white/10 text-sm">
+                  {launch.enrichment.mission_objectives.duration && (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Clock className="h-4 w-4" />
+                      <span>{launch.enrichment.mission_objectives.duration}</span>
+                    </div>
+                  )}
+                  {launch.enrichment.mission_objectives.trajectory && (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Route className="h-4 w-4" />
+                      <span>{launch.enrichment.mission_objectives.trajectory}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Historical Context - Enriched Content */}
+          {launch.enrichment?.historical_context && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5 text-purple-400" />
+                  Historical Context
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {launch.enrichment.historical_context.significance && (
+                  <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                    <p className="text-gray-300 leading-relaxed">
+                      {launch.enrichment.historical_context.significance}
+                    </p>
+                  </div>
+                )}
+
+                {launch.enrichment.historical_context.program_history && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Program History</h4>
+                    <p className="text-gray-300 text-sm">
+                      {launch.enrichment.historical_context.program_history}
+                    </p>
+                  </div>
+                )}
+
+                {launch.enrichment.historical_context.milestones && launch.enrichment.historical_context.milestones.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Historical Milestones</h4>
+                    <div className="space-y-2">
+                      {launch.enrichment.historical_context.milestones.map((milestone, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-gray-300 text-sm">
+                          <div className="h-2 w-2 rounded-full bg-purple-400 mt-1.5 flex-shrink-0" />
+                          {milestone}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {launch.enrichment.historical_context.future_implications && (
+                  <div className="pt-3 border-t border-white/10">
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Future Implications</h4>
+                    <p className="text-gray-300 text-sm">
+                      {launch.enrichment.historical_context.future_implications}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Technical Details - Enriched Content */}
+          {launch.enrichment?.technical_details && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5 text-orange-400" />
+                  Technical Specifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {launch.enrichment.technical_details.vehicle && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Launch Vehicle</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {launch.enrichment.technical_details.vehicle.name && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Name</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.vehicle.name}</p>
+                        </div>
+                      )}
+                      {launch.enrichment.technical_details.vehicle.height && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Height</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.vehicle.height}</p>
+                        </div>
+                      )}
+                      {launch.enrichment.technical_details.vehicle.thrust && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Thrust</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.vehicle.thrust}</p>
+                        </div>
+                      )}
+                      {launch.enrichment.technical_details.vehicle.stages && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Stages</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.vehicle.stages}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {launch.enrichment.technical_details.spacecraft && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Spacecraft</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {launch.enrichment.technical_details.spacecraft.name && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Name</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.spacecraft.name}</p>
+                        </div>
+                      )}
+                      {launch.enrichment.technical_details.spacecraft.capacity && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Capacity</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.spacecraft.capacity}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {launch.enrichment.technical_details.mission_parameters && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Mission Parameters</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {launch.enrichment.technical_details.mission_parameters.destination && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Destination</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.mission_parameters.destination}</p>
+                        </div>
+                      )}
+                      {launch.enrichment.technical_details.mission_parameters.distance && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Distance</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.mission_parameters.distance}</p>
+                        </div>
+                      )}
+                      {launch.enrichment.technical_details.mission_parameters.duration && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Duration</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.mission_parameters.duration}</p>
+                        </div>
+                      )}
+                      {launch.enrichment.technical_details.mission_parameters.orbit_type && (
+                        <div className="p-3 rounded-lg bg-white/5">
+                          <p className="text-xs text-gray-500">Orbit Type</p>
+                          <p className="text-white font-medium">{launch.enrichment.technical_details.mission_parameters.orbit_type}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </CardContent>

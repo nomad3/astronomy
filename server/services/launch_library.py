@@ -30,7 +30,38 @@ async def fetch_launch_by_id(launch_id: str) -> Optional[Dict[str, Any]]:
         response.raise_for_status()
 
     launch = response.json()
+    result = _parse_launch_detail(launch)
 
+    # Cache for 5 minutes
+    await set_cache(cache_key, result, expire=300)
+    return result
+
+
+async def fetch_launch_by_slug(slug: str) -> Optional[Dict[str, Any]]:
+    """Fetch a launch by its slug by resolving slug to ID first."""
+
+    # Get all upcoming launches and find the one with matching slug
+    try:
+        launches = await fetch_upcoming_launches(limit=50)
+
+        # Find the launch with matching slug
+        launch_id = None
+        for launch in launches:
+            if launch and isinstance(launch, dict) and launch.get("slug") == slug:
+                launch_id = launch.get("id")
+                break
+
+        if not launch_id:
+            return None
+
+        # Fetch full details by ID
+        return await fetch_launch_by_id(launch_id)
+    except Exception:
+        return None
+
+
+def _parse_launch_detail(launch: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse launch detail from API response."""
     # Extract rocket details
     rocket = launch.get("rocket", {})
     rocket_config = rocket.get("configuration", {})
@@ -49,7 +80,7 @@ async def fetch_launch_by_id(launch_id: str) -> Optional[Dict[str, Any]]:
     # Extract program info
     programs = launch.get("program", []) or []
 
-    result = {
+    return {
         "id": launch.get("id"),
         "name": launch.get("name"),
         "slug": launch.get("slug"),
@@ -172,10 +203,6 @@ async def fetch_launch_by_id(launch_id: str) -> Optional[Dict[str, Any]]:
         "last_updated": launch.get("last_updated"),
     }
 
-    # Cache for 5 minutes
-    await set_cache(cache_key, result, expire=300)
-    return result
-
 
 async def fetch_upcoming_launches(limit: int = 10) -> List[Dict[str, Any]]:
     """Fetch upcoming launches from Launch Library 2 API (cached for 5 minutes)."""
@@ -203,16 +230,17 @@ async def fetch_upcoming_launches(limit: int = 10) -> List[Dict[str, Any]]:
     result = [
         {
             "id": launch.get("id"),
+            "slug": launch.get("slug"),
             "name": launch.get("name"),
-            "status": launch.get("status", {}).get("name"),
+            "status": (launch.get("status") or {}).get("name"),
             "window_start": launch.get("window_start"),
             "window_end": launch.get("window_end"),
-            "mission": launch.get("mission", {}).get("name"),
-            "mission_description": launch.get("mission", {}).get("description"),
-            "orbit": launch.get("mission", {}).get("orbit", {}).get("name"),
-            "provider": launch.get("launch_service_provider", {}).get("name"),
-            "pad": launch.get("pad", {}).get("name"),
-            "location": launch.get("pad", {}).get("location", {}).get("name"),
+            "mission": (launch.get("mission") or {}).get("name"),
+            "mission_description": (launch.get("mission") or {}).get("description"),
+            "orbit": ((launch.get("mission") or {}).get("orbit") or {}).get("name"),
+            "provider": (launch.get("launch_service_provider") or {}).get("name"),
+            "pad": (launch.get("pad") or {}).get("name"),
+            "location": ((launch.get("pad") or {}).get("location") or {}).get("name"),
             "image": launch.get("image"),
             "infographic": launch.get("infographic"),
             "webcast": launch.get("webcast_live"),
