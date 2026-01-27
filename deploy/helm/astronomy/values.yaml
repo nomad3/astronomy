@@ -13,7 +13,7 @@ server:
   replicaCount: 1
   image:
     repository: astronomy-server
-    tag: "20260127093352"
+    tag: "20260127103000"
   port: 8000
   resources:
     requests:

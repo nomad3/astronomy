@@ -1,5 +1,6 @@
 """Enrichment service - AI-powered content enhancement for launches and astronomical events."""
 
+import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 import json
@@ -7,6 +8,11 @@ import httpx
 import anthropic
 
 from core.config import settings
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 from db.session import SessionLocal
 from db.models import EnrichedContent
 from services import chromadb_service
@@ -65,43 +71,76 @@ def get_notability_tags(launch: Dict[str, Any]) -> List[str]:
     return tags
 
 
-async def search_web(query: str, num_results: int = 5) -> List[Dict[str, str]]:
+def extract_mission_name(full_name: str) -> str:
+    """Extract just the mission name from full launch name like 'SLS Block 1 | Artemis II'."""
+    # Split on common separators
+    if "|" in full_name:
+        parts = full_name.split("|")
+        return parts[-1].strip()  # Take the last part (mission name)
+    if "/" in full_name:
+        parts = full_name.split("/")
+        return parts[-1].strip()
+    return full_name.strip()
+
+
+async def search_web(query: str, num_results: int = 5, retries: int = 3) -> List[Dict[str, str]]:
     """Search the web using DuckDuckGo HTML search."""
+    import asyncio
+    import re
+    import urllib.parse
+
     results = []
+    logger.info(f"[WebSearch] Searching for: {query}")
 
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            # Use DuckDuckGo HTML endpoint
-            response = await client.get(
-                "https://html.duckduckgo.com/html/",
-                params={"q": query},
-                headers={"User-Agent": "Mozilla/5.0 (compatible; AstronomyBot/1.0)"}
-            )
+    for attempt in range(retries):
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                # Use DuckDuckGo HTML endpoint with a realistic user agent
+                response = await client.get(
+                    "https://html.duckduckgo.com/html/",
+                    params={"q": query},
+                    headers={
+                        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        "Accept": "text/html,application/xhtml+xml",
+                        "Accept-Language": "en-US,en;q=0.9",
+                    }
+                )
 
-            if response.status_code == 200:
-                # Simple parsing - extract titles and URLs from result links
-                html = response.text
-                # Find result blocks
-                import re
-                links = re.findall(r'<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>([^<]+)</a>', html)
+                logger.info(f"[WebSearch] Response status: {response.status_code} (attempt {attempt + 1})")
 
-                for url, title in links[:num_results]:
-                    # Clean up DuckDuckGo redirect URLs
-                    if "uddg=" in url:
-                        actual_url = url.split("uddg=")[-1].split("&")[0]
-                        import urllib.parse
-                        actual_url = urllib.parse.unquote(actual_url)
-                    else:
-                        actual_url = url
+                if response.status_code == 202:
+                    # Rate limited - wait and retry
+                    logger.info(f"[WebSearch] Rate limited, waiting 2 seconds...")
+                    await asyncio.sleep(2)
+                    continue
 
-                    results.append({
-                        "title": title.strip(),
-                        "url": actual_url,
-                    })
+                if response.status_code == 200:
+                    # Simple parsing - extract titles and URLs from result links
+                    html = response.text
+                    # Find result blocks
+                    links = re.findall(r'<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>([^<]+)</a>', html)
+                    logger.info(f"[WebSearch] Found {len(links)} links")
 
-    except Exception as e:
-        print(f"Web search error: {e}")
+                    for url, title in links[:num_results]:
+                        # Clean up DuckDuckGo redirect URLs
+                        if "uddg=" in url:
+                            actual_url = url.split("uddg=")[-1].split("&")[0]
+                            actual_url = urllib.parse.unquote(actual_url)
+                        else:
+                            actual_url = url
 
+                        results.append({
+                            "title": title.strip(),
+                            "url": actual_url,
+                        })
+                    break  # Success, exit retry loop
+
+        except Exception as e:
+            logger.error(f"[WebSearch] Error: {e}")
+            if attempt < retries - 1:
+                await asyncio.sleep(1)
+
+    logger.info(f"[WebSearch] Returning {len(results)} results")
     return results
 
 
@@ -214,21 +253,117 @@ JSON Response:""",
 
 SEARCH_QUERIES = {
     "crew_profiles": [
-        '"{mission}" crew members astronauts',
-        '"{mission}" crew background biography',
+        '{mission} crew astronauts names',
+        '{mission} crew biography background',
     ],
     "mission_objectives": [
-        '"{mission}" mission objectives goals',
-        '"{mission}" scientific experiments payload',
+        '{mission} mission objectives goals',
+        '{mission} experiments payload science',
     ],
     "historical_context": [
-        '"{mission}" historical significance importance',
-        '"{mission}" program history milestones',
+        '{mission} significance history',
+        '{mission} NASA milestone program',
     ],
     "technical_details": [
-        '"{mission}" technical specifications rocket',
-        '"{mission}" spacecraft details parameters',
+        '{mission} rocket specifications',
+        '{mission} spacecraft Orion details',
     ],
+}
+
+# Knowledge-only prompts (when web search fails)
+KNOWLEDGE_PROMPTS = {
+    "crew_profiles": """You are providing information about the crew members for the space mission: {mission_name}
+
+Based on your knowledge, create detailed crew profiles. For each crew member, provide:
+- Full name
+- Role on mission (Commander, Pilot, Mission Specialist, etc.)
+- Background (nationality, agency, previous missions)
+- A brief bio highlighting their experience
+
+Return your response as a JSON object with this structure:
+{{
+  "crew": [
+    {{
+      "name": "Full Name",
+      "role": "Role",
+      "agency": "NASA/ESA/etc",
+      "nationality": "Country",
+      "previous_missions": ["Mission 1", "Mission 2"],
+      "bio": "2-3 sentence biography"
+    }}
+  ]
+}}
+
+Only include crew members you know about. If this is not a crewed mission or you don't have crew information, return {{"crew": []}}.
+
+JSON Response:""",
+
+    "mission_objectives": """You are providing information about the mission: {mission_name}
+
+Based on your knowledge, summarize the mission objectives. Include:
+- Primary mission goal
+- Scientific experiments or payloads
+- Key milestones during the mission
+- Expected duration and trajectory
+
+Return your response as a JSON object:
+{{
+  "primary_goal": "Main objective in 1-2 sentences",
+  "experiments": ["Experiment 1", "Experiment 2"],
+  "milestones": ["Milestone 1", "Milestone 2"],
+  "duration": "Expected duration",
+  "trajectory": "Mission path description"
+}}
+
+JSON Response:""",
+
+    "historical_context": """You are providing information about the historical significance of: {mission_name}
+
+Based on your knowledge, provide historical context for this mission. Include:
+- Why this mission is significant
+- Previous related missions or programs
+- What makes this a milestone (if applicable)
+- Connection to broader space exploration goals
+
+Return your response as a JSON object:
+{{
+  "significance": "2-3 sentences on why this matters",
+  "program_history": "Brief history of the program",
+  "milestones": ["Key historical milestone 1", "Milestone 2"],
+  "future_implications": "What this enables for future exploration"
+}}
+
+JSON Response:""",
+
+    "technical_details": """You are providing technical specifications for: {mission_name}
+
+Based on your knowledge, provide technical details about this mission. Include:
+- Launch vehicle specifications
+- Spacecraft details
+- Mission parameters (orbit, distance, duration)
+- Notable technical achievements
+
+Return your response as a JSON object:
+{{
+  "vehicle": {{
+    "name": "Vehicle name",
+    "height": "Height in meters",
+    "thrust": "Thrust specification",
+    "stages": "Number of stages"
+  }},
+  "spacecraft": {{
+    "name": "Spacecraft name",
+    "capacity": "Crew or cargo capacity"
+  }},
+  "mission_parameters": {{
+    "destination": "Target destination",
+    "distance": "Distance traveled",
+    "duration": "Mission duration",
+    "orbit_type": "Type of orbit"
+  }}
+}}
+
+JSON Response:""",
 }
 
 
@@ -237,8 +372,14 @@ async def research_and_synthesize(
     content_type: str,
 ) -> Dict[str, Any]:
     """Research a topic and synthesize content using Claude."""
+    import asyncio
+
+    # Extract simple mission name for better search results
+    simple_name = extract_mission_name(mission_name)
+    logger.info(f"[Enrichment] Researching {content_type} for: {mission_name} (search term: {simple_name})")
 
     if not settings.ANTHROPIC_API_KEY:
+        logger.error("[Enrichment] ANTHROPIC_API_KEY not configured")
         return {"error": "ANTHROPIC_API_KEY not configured"}
 
     # Gather search results
@@ -246,12 +387,16 @@ async def research_and_synthesize(
     queries = SEARCH_QUERIES.get(content_type, [])
 
     for query_template in queries:
-        query = query_template.format(mission=mission_name)
+        query = query_template.format(mission=simple_name)
         results = await search_web(query, num_results=3)
         all_results.extend(results)
+        # Small delay between searches to avoid rate limiting
+        await asyncio.sleep(0.5)
 
-    if not all_results:
-        return {"error": "No search results found"}
+    # If no search results, use Claude's knowledge
+    use_knowledge_only = len(all_results) == 0
+    if use_knowledge_only:
+        logger.info(f"[Enrichment] No search results, using Claude's knowledge for {content_type}")
 
     # Format search results for Claude
     search_text = ""
@@ -261,17 +406,23 @@ async def research_and_synthesize(
         sources.append(result['url'])
 
     # Get the prompt for this content type
-    prompt_template = ENRICHMENT_PROMPTS.get(content_type)
-    if not prompt_template:
-        return {"error": f"Unknown content type: {content_type}"}
-
-    prompt = prompt_template.format(
-        mission_name=mission_name,
-        search_results=search_text,
-    )
+    if use_knowledge_only:
+        prompt_template = KNOWLEDGE_PROMPTS.get(content_type)
+        if not prompt_template:
+            return {"error": f"Unknown content type: {content_type}"}
+        prompt = prompt_template.format(mission_name=mission_name)
+    else:
+        prompt_template = ENRICHMENT_PROMPTS.get(content_type)
+        if not prompt_template:
+            return {"error": f"Unknown content type: {content_type}"}
+        prompt = prompt_template.format(
+            mission_name=mission_name,
+            search_results=search_text,
+        )
 
     # Call Claude for synthesis
     try:
+        logger.info(f"[Enrichment] Calling Claude API for {content_type}")
         client = get_claude_client()
         message = client.messages.create(
             model="claude-sonnet-4-20250514",
@@ -280,6 +431,7 @@ async def research_and_synthesize(
         )
 
         response_text = message.content[0].text.strip()
+        logger.info(f"[Enrichment] Got Claude response ({len(response_text)} chars)")
 
         # Extract JSON from response
         try:
@@ -288,10 +440,12 @@ async def research_and_synthesize(
                 json_end = response_text.rindex("}") + 1
                 json_str = response_text[json_start:json_end]
                 content = json.loads(json_str)
+                logger.info(f"[Enrichment] Parsed JSON successfully")
             else:
                 content = {}
+                logger.warning("[Enrichment] No JSON found in response")
         except (json.JSONDecodeError, ValueError) as e:
-            print(f"Error parsing Claude response: {e}")
+            logger.error(f"[Enrichment] Error parsing Claude response: {e}")
             content = {}
 
         return {
@@ -310,6 +464,9 @@ async def enrich_launch(launch: Dict[str, Any]) -> Dict[str, Any]:
     launch_name = launch.get("name", "")
     tags = get_notability_tags(launch)
 
+    logger.info(f"[Enrichment] Starting enrichment for: {launch_name} (ID: {launch_id})")
+    logger.info(f"[Enrichment] Tags: {tags}")
+
     results = {}
     db = SessionLocal()
 
@@ -320,6 +477,8 @@ async def enrich_launch(launch: Dict[str, Any]) -> Dict[str, Any]:
         # Only generate crew profiles for crewed missions
         if "crewed" in tags:
             content_types.insert(0, "crew_profiles")
+
+        logger.info(f"[Enrichment] Content types to generate: {content_types}")
 
         for content_type in content_types:
             # Check if we already have recent enrichment
@@ -376,8 +535,10 @@ async def enrich_launch(launch: Dict[str, Any]) -> Dict[str, Any]:
             results[content_type] = {"status": "created", "content": content}
 
         db.commit()
+        logger.info(f"[Enrichment] Completed enrichment for: {launch_name}")
 
     except Exception as e:
+        logger.error(f"[Enrichment] Error enriching {launch_name}: {e}")
         db.rollback()
         raise e
     finally:
@@ -421,6 +582,7 @@ async def has_recent_enrichment(entity_type: str, entity_id: str) -> bool:
 
 async def run_daily_enrichment() -> Dict[str, Any]:
     """Run daily enrichment job for notable items."""
+    logger.info("[DailyEnrichment] Starting daily enrichment job")
     results = {
         "launches_processed": 0,
         "launches_enriched": 0,
@@ -430,6 +592,7 @@ async def run_daily_enrichment() -> Dict[str, Any]:
     try:
         # Get upcoming launches
         launches = await fetch_upcoming_launches(limit=50)
+        logger.info(f"[DailyEnrichment] Fetched {len(launches)} launches")
 
         # Score and sort by notability
         notable_launches = []
@@ -439,6 +602,7 @@ async def run_daily_enrichment() -> Dict[str, Any]:
                 notable_launches.append((score, launch))
 
         notable_launches.sort(key=lambda x: x[0], reverse=True)
+        logger.info(f"[DailyEnrichment] Found {len(notable_launches)} notable launches")
 
         # Process top 5 notable launches without recent enrichment
         processed = 0
@@ -451,31 +615,40 @@ async def run_daily_enrichment() -> Dict[str, Any]:
                 continue
 
             if await has_recent_enrichment("launch", launch_id):
+                logger.info(f"[DailyEnrichment] Skipping {launch.get('name')} - already enriched")
                 continue
 
             try:
+                logger.info(f"[DailyEnrichment] Enriching: {launch.get('name')} (score: {score})")
                 await enrich_launch(launch)
                 results["launches_enriched"] += 1
             except Exception as e:
+                logger.error(f"[DailyEnrichment] Failed to enrich {launch.get('name')}: {e}")
                 results["errors"].append(f"Failed to enrich {launch.get('name')}: {str(e)}")
 
             results["launches_processed"] += 1
             processed += 1
 
     except Exception as e:
+        logger.error(f"[DailyEnrichment] Job failed: {e}")
         results["errors"].append(f"Daily enrichment failed: {str(e)}")
 
+    logger.info(f"[DailyEnrichment] Completed: {results}")
     return results
 
 
 async def trigger_enrichment(entity_type: str, entity_id: str) -> Dict[str, Any]:
     """Manually trigger enrichment for a specific entity."""
+    logger.info(f"[TriggerEnrichment] Manual trigger for {entity_type}: {entity_id}")
+
     if entity_type == "launch":
         # Fetch launch details
         from services.launch_library import fetch_launch_by_id
         launch = await fetch_launch_by_id(entity_id)
         if not launch:
+            logger.error(f"[TriggerEnrichment] Launch not found: {entity_id}")
             return {"error": "Launch not found"}
         return await enrich_launch(launch)
 
+    logger.error(f"[TriggerEnrichment] Unsupported entity type: {entity_type}")
     return {"error": f"Unsupported entity type: {entity_type}"}
