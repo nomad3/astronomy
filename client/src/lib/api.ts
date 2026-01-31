@@ -165,11 +165,19 @@ export interface TechnicalDetails {
   };
 }
 
+export interface WebcastLink {
+  url: string;
+  title: string;
+  source: string;
+  is_official: boolean;
+}
+
 export interface LaunchEnrichment {
   crew_profiles?: { crew: CrewMember[] };
   mission_objectives?: MissionObjectives;
   historical_context?: HistoricalContext;
   technical_details?: TechnicalDetails;
+  webcast_links?: { streams: WebcastLink[] };
 }
 
 export interface LaunchDetail {

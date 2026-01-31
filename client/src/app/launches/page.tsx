@@ -18,6 +18,10 @@ import {
   Star,
   Users,
   Moon,
+  Tv,
+  Play,
+  Radio,
+  ExternalLink,
 } from "lucide-react";
 
 // Keywords for identifying notable launches
@@ -118,6 +122,11 @@ export default function LaunchesPage() {
     );
   }
 
+  // Filter launches with webcasts available
+  const launchesWithWebcasts = launches.filter(
+    (launch) => launch.webcast || launch.vid_url
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -129,6 +138,54 @@ export default function LaunchesPage() {
           {launches.length} launches scheduled
         </p>
       </div>
+
+      {/* Webcasts Available Section */}
+      {launchesWithWebcasts.length > 0 && (
+        <Card className="border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-transparent">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Tv className="h-5 w-5 text-purple-400" />
+              <h2 className="text-lg font-semibold text-white">Watch Live</h2>
+              <Badge variant="info" className="ml-2">{launchesWithWebcasts.length} with webcasts</Badge>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {launchesWithWebcasts.slice(0, 6).map((launch) => (
+                <Link
+                  key={`webcast-${launch.id}`}
+                  href={`/launches/${launch.slug}`}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+                >
+                  {launch.image ? (
+                    <div className="relative h-12 w-12 rounded-lg overflow-hidden flex-shrink-0">
+                      <Image
+                        src={launch.image}
+                        alt={launch.name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors">
+                        <Play className="h-5 w-5 text-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-12 w-12 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                      <Play className="h-5 w-5 text-purple-400" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{launch.name}</p>
+                    <p className="text-xs text-gray-400">{getTimeUntil(launch.window_start)}</p>
+                  </div>
+                  {launch.vid_url && (
+                    <ExternalLink className="h-4 w-4 text-gray-500 group-hover:text-purple-400 transition-colors flex-shrink-0" />
+                  )}
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         {launches.map((launch, index) => {

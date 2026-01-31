@@ -52,12 +52,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Server image
 */}}
 {{- define "astronomy.serverImage" -}}
-{{- printf "%s/%s:%s" .Values.image.registry .Values.server.image.repository .Values.server.image.tag }}
+{{- printf "%s/%s:%s" .Values.image.registry .Values.server.image.repository (.Values.server.image.tag | toString) }}
 {{- end }}
 
 {{/*
 Client image
 */}}
 {{- define "astronomy.clientImage" -}}
-{{- printf "%s/%s:%s" .Values.image.registry .Values.client.image.repository .Values.client.image.tag }}
+{{- printf "%s/%s:%s" .Values.image.registry .Values.client.image.repository (.Values.client.image.tag | toString) }}
 {{- end }}

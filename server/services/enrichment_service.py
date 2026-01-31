@@ -249,6 +249,35 @@ Return your response as a JSON object:
 }}
 
 JSON Response:""",
+
+    "webcast_links": """You are finding live stream and webcast links for the space launch: {mission_name}
+
+Based on the following search results:
+{search_results}
+
+Find YouTube live streams or official webcasts for this launch. Extract:
+- YouTube video URLs (must be valid youtube.com/watch?v= URLs)
+- Stream titles
+- Source/channel name (NASA, SpaceX, etc.)
+- Whether it's an official agency stream
+
+IMPORTANT: Only include URLs that are actual YouTube video links (youtube.com/watch?v=...) or official agency stream pages.
+
+Return your response as a JSON object:
+{{
+  "streams": [
+    {{
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID",
+      "title": "Stream title",
+      "source": "NASA/SpaceX/etc",
+      "is_official": true
+    }}
+  ]
+}}
+
+If no valid streams are found, return {{"streams": []}}.
+
+JSON Response:""",
 }
 
 SEARCH_QUERIES = {
@@ -267,6 +296,11 @@ SEARCH_QUERIES = {
     "technical_details": [
         '{mission} rocket specifications',
         '{mission} spacecraft Orion details',
+    ],
+    "webcast_links": [
+        '{mission} launch live stream youtube',
+        '{mission} launch webcast official video',
+        '{mission} rocket launch youtube',
     ],
 }
 
@@ -362,6 +396,30 @@ Return your response as a JSON object:
     "orbit_type": "Type of orbit"
   }}
 }}
+
+JSON Response:""",
+
+    "webcast_links": """You are providing webcast information for the space launch: {mission_name}
+
+Based on your knowledge, provide known official streaming channels for this launch provider.
+For example:
+- NASA launches: NASA TV YouTube channel
+- SpaceX launches: SpaceX YouTube channel
+- Rocket Lab: Rocket Lab YouTube channel
+
+Return your response as a JSON object:
+{{
+  "streams": [
+    {{
+      "url": "https://www.youtube.com/user/NASAtelevision",
+      "title": "NASA TV - Official Stream",
+      "source": "NASA",
+      "is_official": true
+    }}
+  ]
+}}
+
+Only include channels you know are official. If unknown, return {{"streams": []}}.
 
 JSON Response:""",
 }
@@ -472,7 +530,7 @@ async def enrich_launch(launch: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         # Determine which content types to generate
-        content_types = ["mission_objectives", "historical_context", "technical_details"]
+        content_types = ["mission_objectives", "historical_context", "technical_details", "webcast_links"]
 
         # Only generate crew profiles for crewed missions
         if "crewed" in tags:
