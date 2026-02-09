@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 
 export const metadata: Metadata = {
-  title: "Cosmos - Space Explorer",
+  title: "Atlas X - Space Explorer",
   description: "Real-time space exploration dashboard with NASA data",
 };
 

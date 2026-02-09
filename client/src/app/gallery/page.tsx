@@ -51,7 +51,7 @@ export default function GalleryPage() {
           Gallery
         </h1>
         <p className="text-gray-400 mt-1">
-          NASA imagery from across the cosmos
+          NASA imagery from across the universe
         </p>
       </div>
 

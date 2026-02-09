@@ -39,7 +39,7 @@ export function Sidebar() {
             <Rocket className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">Cosmos</h1>
+            <h1 className="text-lg font-bold text-white">Atlas X</h1>
             <p className="text-xs text-gray-500">Space Explorer</p>
           </div>
         </div>

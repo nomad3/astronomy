@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Cosmos - Space Explorer is a full-stack space data aggregation dashboard with AI-powered intelligence. It pulls real-time data from NASA APIs, Launch Library, and other space data sources to display rocket launches, ISS tracking, asteroid monitoring, Mars rover photos, telescope imagery, and AI-generated insights.
+Atlas X - Space Explorer is a full-stack space data aggregation dashboard with AI-powered intelligence. It pulls real-time data from NASA APIs, Launch Library, and other space data sources to display rocket launches, ISS tracking, asteroid monitoring, Mars rover photos, telescope imagery, and AI-generated insights.
 
 ## Tech Stack
 
@@ -16,7 +16,7 @@ Cosmos - Space Explorer is a full-stack space data aggregation dashboard with AI
 
 ## Quick Start
 
-```bash
+```bash![alt text](image.png)
 # Docker (recommended)
 cp .env.example .env
 docker-compose up --build

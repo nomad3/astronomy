@@ -1,4 +1,4 @@
-# Cosmos - Space Explorer
+# Atlas X - Space Explorer
 
 A modern, clean space exploration dashboard built with Next.js 16 and FastAPI. Monitor launches, track the ISS, explore Mars rover imagery, and view NASA's stunning space photography.
 

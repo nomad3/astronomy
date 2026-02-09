@@ -42,7 +42,7 @@ export function MobileNav() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
             <Rocket className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-bold text-white">Cosmos</span>
+          <span className="text-lg font-bold text-white">Atlas X</span>
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
