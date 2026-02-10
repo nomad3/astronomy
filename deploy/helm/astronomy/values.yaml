@@ -94,6 +94,30 @@ ingress:
   tls:
     enabled: false
     secretName: astronomy-tls
+  # Additional hosts sharing this ingress/load balancer
+  additionalHosts:
+    - host: intospace.agentprovision.com
+      certificateName: intospace-frontend-microservice-managed-cert
+      paths:
+        - path: /api
+          pathType: Prefix
+          serviceName: intospace-backend-microservice
+          servicePort: 8000
+        - path: /
+          pathType: Prefix
+          serviceName: intospace-frontend-microservice
+          servicePort: 80
+    - host: marketing.agentprovision.com
+      certificateName: marketing-cert
+      paths:
+        - path: /api
+          pathType: Prefix
+          serviceName: marketing-backend-microservice
+          servicePort: 3000
+        - path: /
+          pathType: Prefix
+          serviceName: marketing-frontend-microservice
+          servicePort: 80
 
 # Service configuration
 service:

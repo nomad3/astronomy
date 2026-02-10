@@ -8,7 +8,7 @@ metadata:
     {{- include "astronomy.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: gce
-    networking.gke.io/managed-certificates: {{ include "astronomy.fullname" . }}-cert
+    networking.gke.io/managed-certificates: {{ include "astronomy.fullname" . }}-cert{{- range .Values.ingress.additionalHosts }},{{ .certificateName }}{{- end }}
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -31,4 +31,18 @@ spec:
                 name: {{ .Values.client.name }}
                 port:
                   number: 80
+    {{- range .Values.ingress.additionalHosts }}
+    - host: {{ .host }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ .serviceName }}
+                port:
+                  number: {{ .servicePort }}
+          {{- end }}
+    {{- end }}
 {{- end }}
