@@ -1,0 +1,170 @@
+name: Local Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'client/**'
+      - 'nginx.conf'
+      - 'docker-compose.prod.yml'
+      - 'cloudflared/**'
+      - '.github/workflows/local-deploy.yaml'
+  workflow_dispatch:
+    inputs:
+      services:
+        description: 'Services to rebuild (comma-separated: server,client,nginx,cloudflared)'
+        required: false
+        default: 'all'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed services
+        id: changes
+        if: github.event_name == 'push'
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          echo "files=$CHANGED" >> $GITHUB_OUTPUT
+
+          SERVICES=""
+          echo "$CHANGED" | grep -q "server/" && SERVICES="$SERVICES server"
+          echo "$CHANGED" | grep -q "client/" && SERVICES="$SERVICES client"
+          echo "$CHANGED" | grep -q "nginx.conf" && SERVICES="$SERVICES nginx"
+          echo "$CHANGED" | grep -q "cloudflared/" && SERVICES="$SERVICES cloudflared"
+          echo "$CHANGED" | grep -q "docker-compose.prod.yml" && SERVICES="server client nginx cloudflared"
+
+          [ -z "$SERVICES" ] && SERVICES="server client"
+          echo "services=$SERVICES" >> $GITHUB_OUTPUT
+          echo "Deploying: $SERVICES"
+
+      - name: Set services from dispatch
+        id: dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          INPUT="${{ github.event.inputs.services }}"
+          if [ "$INPUT" = "all" ]; then
+            echo "services=server client nginx cloudflared" >> $GITHUB_OUTPUT
+          else
+            echo "services=$(echo $INPUT | tr ',' ' ')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Clean up Docker disk (threshold-based)
+        run: |
+          echo "--- Docker disk before cleanup ---"
+          docker system df 2>/dev/null || true
+
+          AVAIL_GB=$(docker run --rm --privileged alpine df / 2>/dev/null | tail -1 | awk '{print int($4/1024/1024)}')
+          echo "Available disk: ${AVAIL_GB}GB"
+
+          if [ "${AVAIL_GB:-0}" -lt 15 ]; then
+            echo "Low disk (${AVAIL_GB}GB < 15GB) — running aggressive cleanup"
+            docker image prune -f 2>/dev/null || true
+            docker image prune -af 2>/dev/null || true
+            docker builder prune -af 2>/dev/null || true
+
+            for vol in $(docker volume ls -q 2>/dev/null | grep buildkit); do
+              if ! docker ps -q --filter "volume=$vol" 2>/dev/null | grep -q .; then
+                echo "Removing orphaned buildx volume: $vol"
+                docker volume rm "$vol" 2>/dev/null || true
+              fi
+            done
+          else
+            echo "Disk OK (${AVAIL_GB}GB) — only pruning dangling images"
+            docker image prune -f 2>/dev/null || true
+          fi
+
+          echo "--- Docker disk after cleanup ---"
+          docker system df 2>/dev/null || true
+
+      - name: Build and deploy
+        run: |
+          SERVICES="${{ steps.changes.outputs.services || steps.dispatch.outputs.services }}"
+          echo "Building: $SERVICES"
+
+          cd /Users/nomade/Documents/GitHub/astronomy
+
+          for svc in $SERVICES; do
+            echo "--- Rebuilding $svc ---"
+            docker compose -f docker-compose.prod.yml up -d --build "$svc" 2>&1 | tail -5
+          done
+
+          echo "--- Waiting for services to be healthy ---"
+          sleep 20
+
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/health 2>/dev/null || echo "000")
+          echo "API health: $API_STATUS"
+
+          SITE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://space.agentprovision.com/ 2>/dev/null || echo "000")
+          echo "Site status: $SITE_STATUS"
+
+          if [ "$API_STATUS" = "000" ]; then
+            echo "WARNING: API not responding yet, may still be starting up"
+          fi
+
+      - name: Run pending migrations
+        if: contains(steps.changes.outputs.services || steps.dispatch.outputs.services, 'server') || github.event_name == 'workflow_dispatch'
+        shell: bash --noprofile --norc {0}
+        run: |
+          set +e
+          PROJECT_DIR="/Users/nomade/Documents/GitHub/astronomy"
+          MIGRATION_DIR="$PROJECT_DIR/server/migrations"
+
+          if [ ! -d "$MIGRATION_DIR" ] || [ -z "$(ls "$MIGRATION_DIR"/*.sql 2>/dev/null)" ]; then
+            echo "No migrations to run"
+            exit 0
+          fi
+
+          # Create tracking table if it doesn't exist
+          docker exec astronomy-db-1 psql -U user astronomy -c \
+            "CREATE TABLE IF NOT EXISTS _migrations (filename TEXT PRIMARY KEY, applied_at TIMESTAMP DEFAULT now());" 2>/dev/null
+
+          APPLIED=0
+          SKIPPED=0
+          FAILED=0
+          for f in $(ls "$MIGRATION_DIR"/*.sql 2>/dev/null | sort); do
+            BASENAME=$(basename "$f")
+            ALREADY=$(docker exec astronomy-db-1 psql -U user astronomy -tAc \
+              "SELECT COUNT(*) FROM _migrations WHERE filename = '$BASENAME';" 2>/dev/null)
+            if [ "$ALREADY" = "1" ]; then
+              SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+            echo "Applying: $BASENAME"
+            docker cp "$f" astronomy-db-1:/tmp/migration.sql
+            if docker exec astronomy-db-1 psql -U user astronomy -f /tmp/migration.sql; then
+              docker exec astronomy-db-1 psql -U user astronomy -c \
+                "INSERT INTO _migrations (filename) VALUES ('$BASENAME') ON CONFLICT DO NOTHING;"
+              APPLIED=$((APPLIED + 1))
+            else
+              echo "WARNING: Failed to apply $BASENAME"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+          echo "Migrations: $APPLIED applied, $SKIPPED already applied, $FAILED failed"
+          exit 0
+
+      - name: Post-deploy cleanup
+        run: |
+          docker image prune -f 2>/dev/null || true
+
+          AVAIL_GB=$(docker run --rm --privileged alpine df / 2>/dev/null | tail -1 | awk '{print int($4/1024/1024)}')
+          echo "Available disk after deploy: ${AVAIL_GB}GB"
+
+      - name: Post-deploy summary
+        run: |
+          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          for svc in server client nginx redis db cloudflared; do
+            STATUS=$(docker inspect --format='{{.State.Status}}' astronomy-${svc}-1 2>/dev/null || echo "not found")
+            echo "| $svc | $STATUS |" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Site:** https://space.agentprovision.com" >> $GITHUB_STEP_SUMMARY
