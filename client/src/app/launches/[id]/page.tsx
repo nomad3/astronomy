@@ -39,9 +39,7 @@ import {
   CheckCircle2,
   Route,
   Tv,
-  Radio,
 } from "lucide-react";
-import { YouTubeEmbed } from "@/components/ui/youtube-embed";
 
 export default function LaunchDetailPage() {
   const params = useParams();
@@ -231,98 +229,6 @@ export default function LaunchDetailPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Live Webcast Section */}
-      {((launch.enrichment?.webcast_links?.streams?.length ?? 0) > 0 || (launch.vid_urls?.length ?? 0) > 0 || launch.webcast_live) && (
-        <Card className={launch.webcast_live ? "border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]" : ""}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {launch.webcast_live ? (
-                <>
-                  <Radio className="h-5 w-5 text-red-500 animate-pulse" />
-                  <span className="text-red-400">Live Now</span>
-                  <Badge variant="danger" className="ml-2 animate-pulse">LIVE</Badge>
-                </>
-              ) : (
-                <>
-                  <Tv className="h-5 w-5 text-purple-400" />
-                  Watch Launch
-                </>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Primary stream - embedded player */}
-            {(() => {
-              const primaryStream = launch.enrichment?.webcast_links?.streams?.[0]
-                || (launch.vid_urls?.[0]?.url ? { url: launch.vid_urls[0].url, title: launch.vid_urls[0].title, source: "Official", is_official: true } : null);
-
-              if (primaryStream?.url?.includes("youtube.com") || primaryStream?.url?.includes("youtu.be")) {
-                return (
-                  <div>
-                    <YouTubeEmbed
-                      url={primaryStream.url}
-                      title={primaryStream.title || launch.name}
-                    />
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-sm text-gray-400">
-                        {primaryStream.source && <span className="text-white">{primaryStream.source}</span>}
-                        {primaryStream.is_official && <Badge variant="success" className="ml-2 text-xs">Official</Badge>}
-                      </p>
-                      <a
-                        href={primaryStream.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Open in YouTube
-                      </a>
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            })()}
-
-            {/* Additional streams */}
-            {(() => {
-              const allStreams = [
-                ...(launch.enrichment?.webcast_links?.streams || []),
-                ...(launch.vid_urls?.map(v => ({ url: v.url, title: v.title, source: "Official", is_official: true })) || [])
-              ];
-              const additionalStreams = allStreams.slice(1);
-
-              if (additionalStreams.length > 0) {
-                return (
-                  <div className="pt-4 border-t border-white/10">
-                    <p className="text-sm text-gray-400 mb-3">Other streams:</p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {additionalStreams.map((stream, idx) => (
-                        <a
-                          key={idx}
-                          href={stream.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                        >
-                          <Play className="h-4 w-4 text-red-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white truncate">{stream.title || "Watch Stream"}</p>
-                            <p className="text-xs text-gray-500">{stream.source}</p>
-                          </div>
-                          {stream.is_official && <Badge variant="success" className="text-xs">Official</Badge>}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            })()}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -915,6 +821,38 @@ export default function LaunchDetailPage() {
                         <p className="text-xs text-gray-500 truncate">{info.description}</p>
                       )}
                     </div>
+                  </a>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* AI-Discovered Webcasts */}
+          {launch.enrichment?.webcast_links?.streams && launch.enrichment.webcast_links.streams.length > 0 && (
+            <Card className="border-purple-500/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Tv className="h-4 w-4 text-purple-400" />
+                  Watch Live
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {launch.enrichment.webcast_links.streams.slice(0, 4).map((stream, idx) => (
+                  <a
+                    key={idx}
+                    href={stream.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-purple-500/10 transition-colors group"
+                  >
+                    <Play className="h-4 w-4 text-red-400 group-hover:text-red-300" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-white truncate">{stream.title}</p>
+                      <p className="text-[10px] text-gray-500">{stream.source}</p>
+                    </div>
+                    {stream.is_official && (
+                      <Badge variant="success" className="text-[10px] px-1">Official</Badge>
+                    )}
                   </a>
                 ))}
               </CardContent>

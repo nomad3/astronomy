@@ -1,0 +1,23 @@
+tunnel: astronomy
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  # API routes
+  - hostname: space.agentprovision.com
+    path: /api/*
+    service: http://server:8000
+
+  # API docs
+  - hostname: space.agentprovision.com
+    path: /docs
+    service: http://server:8000
+  - hostname: space.agentprovision.com
+    path: /openapi.json
+    service: http://server:8000
+
+  # Frontend catch-all
+  - hostname: space.agentprovision.com
+    service: http://nginx:80
+
+  # Reject everything else
+  - service: http_status:404
